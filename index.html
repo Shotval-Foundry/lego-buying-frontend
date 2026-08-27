@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>Lego 採購小幫手（測試版）</title>
+<style>
+  body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px; }
+  textarea { width: 100%; height: 120px; font-family: monospace; }
+  button { padding: 8px 16px; margin-top: 10px; cursor: pointer; }
+  input[type="text"], input[type="password"] { padding: 6px; margin-right: 8px; }
+  #status { margin-top: 10px; color: #666; }
+  #result { white-space: pre-wrap; background: #f5f5f5; padding: 12px; margin-top: 16px; border-radius: 6px; }
+  .ext-ok { color: green; }
+  .ext-no { color: red; }
+  #loginBox { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+  #appBox { display: none; }
+  #loginError { color: red; margin-top: 8px; }
+  #userInfo { color: #333; margin-bottom: 12px; }
+  #logoutBtn { background: #eee; }
+</style>
+</head>
+<body>
+
+<h2>Lego 採購小幫手（測試版）</h2>
+
+<p>擴充功能狀態：<span id="extStatus" class="ext-no">尚未偵測到</span></p>
+
+<div id="loginBox">
+  <h3>請先登入</h3>
+  <input type="text" id="usernameInput" placeholder="帳號">
+  <input type="password" id="passwordInput" placeholder="密碼">
+  <button id="loginBtn">登入</button>
+  <div id="loginError"></div>
+</div>
+
+<div id="appBox">
+  <div id="userInfo"></div>
+  <button id="logoutBtn">登出</button>
+
+  <p>零件清單（JSON 格式，可先用預設範例）：</p>
+  <textarea id="partsInput">[
+  { "part_number": "3001", "color": "紅", "required_qty": 2 },
+  { "part_number": "3002", "color": "藍", "required_qty": 1 }
+]</textarea>
+
+  <br>
+  <button id="submitBtn">送出並計算</button>
+
+  <div id="status"></div>
+  <div id="result"></div>
+</div>
+
+<script>
+  const BACKEND_URL = "https://lego-buying-backend.onrender.com";
+
+  let currentToken = null;
+  let currentUsername = null;
+
+  const extStatusEl = document.getElementById('extStatus');
+  const loginBox = document.getElementById('loginBox');
+  const appBox = document.getElementById('appBox');
+  const loginError = document.getElementById('loginError');
+  const userInfoEl = document.getElementById('userInfo');
+  const statusEl = document.getElementById('status');
+  const resultEl = document.getElementById('result');
+  const submitBtn = document.getElementById('submitBtn');
+
+  window.addEventListener('message', (event) => {
+    if (event.source !== window) return;
+    if (event.data?.type === 'LEGO_HELPER_READY') {
+      extStatusEl.textContent = '已偵測到擴充功能 ✅';
+      extStatusEl.className = 'ext-ok';
+    }
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    loginError.textContent = '';
+
+    if (!username || !password) {
+      loginError.textContent = '請輸入帳號與密碼';
+      return;
+    }
+
+    loginError.textContent = '登入中...（若後端剛喚醒可能需等待較久）';
+
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        loginError.textContent = data.detail || '登入失敗';
+        return;
+      }
+
+      currentToken = data.token;
+      currentUsername = username;
+
+      loginError.textContent = '';
+      loginBox.style.display = 'none';
+      appBox.style.display = 'block';
+      userInfoEl.textContent = `目前登入身分：${username}`;
+    } catch (e) {
+      loginError.textContent = '連線發生錯誤：' + e.message;
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    if (currentToken) {
+      try {
+        await fetch(`${BACKEND_URL}/api/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+      } catch (e) {
+      }
+    }
+    currentToken = null;
+    currentUsername = null;
+    appBox.style.display = 'none';
+    loginBox.style.display = 'block';
+    resultEl.textContent = '';
+    statusEl.textContent = '';
+  });
+
+  function requestOptimize(parts, token) {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('逾時：擴充功能沒有回應，請確認是否已安裝並重新整理頁面'));
+      }, 60000);
+
+      function handler(event) {
+        if (event.data?.type === 'LEGO_HELPER_RESPONSE') {
+          clearTimeout(timeout);
+          window.removeEventListener('message', handler);
+          resolve(event.data.payload);
+        }
+      }
+      window.addEventListener('message', handler);
+      window.postMessage({ type: 'LEGO_HELPER_REQUEST', parts, token }, '*');
+    });
+  }
+
+  submitBtn.addEventListener('click', async () => {
+    resultEl.textContent = '';
+
+    if (!currentToken) {
+      statusEl.textContent = '請先登入';
+      return;
+    }
+
+    let parts;
+    try {
+      parts = JSON.parse(document.getElementById('partsInput').value);
+    } catch (e) {
+      statusEl.textContent = '零件清單 JSON 格式錯誤：' + e.message;
+      return;
+    }
+
+    statusEl.textContent = '正在收集資料並計算，請稍候...（第一次可能要等後端喚醒，約 50 秒）';
+    submitBtn.disabled = true;
+
+    try {
+      const result = await requestOptimize(parts, currentToken);
+
+      if (result?.status === 'error' && result?.message?.includes('401')) {
+        statusEl.textContent = '登入已失效，請重新登入';
+        currentToken = null;
+        appBox.style.display = 'none';
+        loginBox.style.display = 'block';
+        return;
+      }
+
+      statusEl.textContent = '完成！';
+      resultEl.textContent = JSON.stringify(result, null, 2);
+    } catch (e) {
+      statusEl.textContent = '發生錯誤：' + e.message;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
