@@ -2,88 +2,500 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>Lego 採購小幫手（測試版）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>採購小幫手 · SHOTVAL FOUNDRY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px; }
-  textarea { width: 100%; height: 120px; font-family: monospace; }
-  button { padding: 8px 16px; margin-top: 10px; cursor: pointer; }
-  input[type="text"], input[type="password"] { padding: 6px; margin-right: 8px; }
-  #status { margin-top: 10px; color: #666; }
-  #result { white-space: pre-wrap; background: #f5f5f5; padding: 12px; margin-top: 16px; border-radius: 6px; }
-  .ext-ok { color: green; }
-  .ext-no { color: red; }
-  #loginBox { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+  :root {
+    /* Shotval Foundry 職人極致深色調 */
+    --bg: #0D0E11;            /* 深邃石墨黑 */
+    --panel: #14161B;         /* 鋼鐵工藝面板 */
+    --panel-border: #232730;  /* 沉穩邊線 */
+    --ink: #E6E8EC;           /* 純淨鈦白文字 */
+    --ink-soft: #7E8494;      /* 低彩度霧灰說明文字 */
+    --line: #1E2129;          /* 微細分隔線 */
+    --brick: #C94038;         /* 精神點綴朱紅 */
+    --brick-dark: #E04840;
+    --stud: #D4AF37;          /* 啞光金屬黃 */
+    --ok-bg: #122417;
+    --ok-ink: #52C472;
+    --warn-bg: #2B2011;
+    --warn-ink: #E0A845;
+    --input-bg: #0A0B0D;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
+
+  /* 放寬整體容器 */
+  .wrap { 
+    max-width: 960px; 
+    margin: 0 auto; 
+    padding: 60px 24px 100px; 
+  }
+
+  /* ---- Header 職人美學佈局 ---- */
+  header.page-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 60px;
+    padding-top: 40px;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .brand-tag {
+    font-family: 'Cinzel', serif;
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--ink);
+    opacity: 1;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 300;
+    font-size: 36px;
+    letter-spacing: 0.22em;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .ext-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--ink-soft);
+  }
+  .ext-status.ok { 
+    color: var(--ok-ink); 
+    background: var(--ok-bg); 
+    border-color: rgba(82, 196, 114, 0.2); 
+  }
+
+  /* ---- 面板與表單區塊 ---- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 48px 56px;
+    margin-bottom: 32px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  }
+
+  .panel h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 28px;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--ink);
+    opacity: 0.9;
+  }
+
+  /* 上下排列結構 */
+  .row { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 24px; 
+    margin-bottom: 32px; 
+  }
+  .row > div { width: 100%; }
+
+  label.field-label {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 12px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---- 輸入框與密碼眼睛定位 ---- */
+  input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--ink);
+    transition: all 0.2s ease;
+  }
+  textarea { min-height: 140px; resize: vertical; }
+  input:focus, textarea:focus { 
+    outline: none;
+    border-color: var(--ink-soft); 
+  }
+
+  .pwd-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .pwd-wrap input {
+    padding-right: 52px;
+  }
+
+  .pwd-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: color 0.2s;
+  }
+  .pwd-toggle:hover {
+    color: var(--ink);
+  }
+  .pwd-toggle svg {
+    pointer-events: none;
+  }
+
+  /* ---- 按鈕樣式 ---- */
+  button {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-primary { 
+    background: var(--ink); 
+    color: var(--bg); 
+    font-size: 15px;
+    font-weight: 500;
+    padding: 10px 16px;
+    letter-spacing: 0.08em;
+    border-radius: 6px;
+  }
+  .btn-primary:hover { 
+    background: #FFFFFF; 
+    opacity: 0.95;
+  }
+  .btn-primary:disabled { 
+    background: #252830; 
+    color: #525766; 
+    cursor: not-allowed; 
+  }
+  .btn-ghost { 
+    background: transparent; 
+    color: var(--ink-soft); 
+    border: 1px solid var(--line); 
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 4px;
+  }
+  .btn-ghost:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  .error-msg { color: var(--brick); font-size: 13px; margin-top: 16px; }
+  .status-msg { color: var(--ink-soft); font-size: 13px; margin: 16px 0; }
+
+  /* ---- 登入狀態與 Spinner 動畫 ---- */
+  .login-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    font-size: 16px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--panel-border);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .user-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  .user-bar strong { color: var(--ink); font-family: 'JetBrains Mono', monospace; }
+
   #appBox { display: none; }
-  #loginError { color: red; margin-top: 8px; }
-  #userInfo { color: #333; margin-bottom: 12px; }
-  #logoutBtn { background: #eee; }
+
+  /* ---- 結果區卡片 ---- */
+  .grand-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #000000;
+    color: white;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin: 32px 0 24px;
+  }
+  .grand-summary .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; }
+  .grand-summary .amount { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 500; color: var(--stud); }
+  .grand-summary .meta { font-size: 11px; opacity: 0.7; margin-top: 4px; }
+
+  .crate {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .crate-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #101216;
+    border-bottom: 1px solid var(--line);
+  }
+  .crate-head .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: var(--stud);
+    color: #0D0E11;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .crate-head .seller {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 6px;
+    color: var(--ink);
+  }
+
+  .crate-items { padding: 8px 24px; }
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-main { flex: 1; min-width: 0; }
+  .item-part {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    background: #1E2129;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+  .item-title {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .item-title a { color: var(--ink); text-decoration: none; transition: color 0.2s; }
+  .item-title a:hover { color: var(--ink-soft); text-decoration: underline; }
+  .item-qty { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+  .item-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .crate-foot {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: var(--input-bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .crate-foot .total { font-weight: 600; font-size: 14px; color: var(--ink); }
+  .crate-foot .breakdown { color: var(--ink-soft); }
+
+  .banner {
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+  .banner.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #4D381A; }
+  .banner.short { background: #2B1416; color: #FF9B9E; border: 1px solid #522023; }
+
+  details.raw-json { margin-top: 24px; font-size: 11px; color: var(--ink-soft); }
+  details.raw-json pre {
+    background: var(--input-bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    white-space: pre-wrap;
+    color: var(--ink-soft);
+  }
+
+  .empty-state { text-align: center; color: var(--ink-soft); padding: 40px 0; font-size: 12px; letter-spacing: 0.05em; }
 </style>
 </head>
 <body>
 
-<h2>Lego 採購小幫手（測試版）</h2>
+<div class="wrap">
 
-<p>擴充功能狀態：<span id="extStatus" class="ext-no">尚未偵測到</span></p>
+  <header class="page-head">
+    <div class="brand-tag">SHOTVAL FOUNDRY</div>
+    <h1>採購小幫手</h1>
+    <span class="ext-status" id="extStatus">擴充功能：尚未偵測到</span>
+  </header>
 
-<div id="loginBox">
-  <h3>請先登入</h3>
-  <input type="text" id="usernameInput" placeholder="帳號">
-  <input type="password" id="passwordInput" placeholder="密碼">
-  <button id="loginBtn">登入</button>
-  <div id="loginError"></div>
-</div>
+  <!-- 登入區塊 -->
+  <div class="panel" id="loginBox">
+    <h2>SYSTEM ACCESS</h2>
+    <div class="row">
+      <div>
+        <label class="field-label" for="usernameInput">帳號</label>
+        <input type="text" id="usernameInput" autocomplete="username">
+      </div>
+      <div>
+        <label class="field-label" for="passwordInput">密碼</label>
+        <div class="pwd-wrap">
+          <input type="password" id="passwordInput" autocomplete="current-password">
+          <button type="button" class="pwd-toggle" id="togglePwdBtn" aria-label="切換密碼顯示">
+            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" id="loginBtn">登入</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
 
-<div id="appBox">
-  <div id="userInfo"></div>
-  <button id="logoutBtn">登出</button>
+  <!-- 登入後主功能區 -->
+  <div id="appBox">
+    <div class="user-bar">
+      <div>OPERATOR: <strong id="userNameLabel"></strong></div>
+      <button class="btn-ghost" id="logoutBtn">登出</button>
+    </div>
 
-  <p>零件清單（JSON 格式，可先用預設範例）：</p>
-  <textarea id="partsInput">[
+    <div class="panel">
+      <h2>PARTS LIST (JSON)</h2>
+      <label class="field-label" for="partsInput">零件需求數據</label>
+      <textarea id="partsInput">[
   { "part_number": "3001", "color": "紅", "required_qty": 2 },
   { "part_number": "3002", "color": "藍", "required_qty": 1 }
 ]</textarea>
+      <br><br>
+      <button class="btn-primary" id="submitBtn">送出並計算</button>
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
 
-  <br>
-  <button id="submitBtn">送出並計算</button>
+    <div id="resultArea"></div>
+  </div>
 
-  <div id="status"></div>
-  <div id="result"></div>
 </div>
 
 <script>
   const BACKEND_URL = "https://lego-buying-backend.onrender.com";
-
   let currentToken = null;
-  let currentUsername = null;
 
   const extStatusEl = document.getElementById('extStatus');
   const loginBox = document.getElementById('loginBox');
   const appBox = document.getElementById('appBox');
   const loginError = document.getElementById('loginError');
-  const userInfoEl = document.getElementById('userInfo');
-  const statusEl = document.getElementById('status');
-  const resultEl = document.getElementById('result');
+  const userNameLabel = document.getElementById('userNameLabel');
+  const statusMsg = document.getElementById('statusMsg');
+  const resultArea = document.getElementById('resultArea');
   const submitBtn = document.getElementById('submitBtn');
+
+  // DOM 載入完成後綁定密碼切換
+  document.addEventListener('DOMContentLoaded', () => {
+    const passwordInput = document.getElementById('passwordInput');
+    const togglePwdBtn = document.getElementById('togglePwdBtn');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    if (togglePwdBtn && passwordInput) {
+      togglePwdBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+
+        eyeIcon.innerHTML = isPassword
+          ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`
+          : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+      });
+    }
+  });
 
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     if (event.data?.type === 'LEGO_HELPER_READY') {
-      extStatusEl.textContent = '已偵測到擴充功能 ✅';
-      extStatusEl.className = 'ext-ok';
+      extStatusEl.textContent = '擴充功能：已連接 ✓';
+      extStatusEl.classList.add('ok');
     }
   });
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const username = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
-    loginError.textContent = '';
+    
+    loginError.className = 'login-status';
+    loginError.innerHTML = '';
 
     if (!username || !password) {
+      loginError.style.color = 'var(--brick)';
       loginError.textContent = '請輸入帳號與密碼';
       return;
     }
 
-    loginError.textContent = '登入中...（若後端剛喚醒可能需等待較久）';
+    loginError.style.color = 'var(--ink-soft)';
+    loginError.innerHTML = `<span class="spinner"></span><span>登入中</span>`;
 
     try {
       const resp = await fetch(`${BACKEND_URL}/api/login`, {
@@ -91,22 +503,21 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
       const data = await resp.json();
 
       if (!resp.ok) {
+        loginError.style.color = 'var(--brick)';
         loginError.textContent = data.detail || '登入失敗';
         return;
       }
 
       currentToken = data.token;
-      currentUsername = username;
-
-      loginError.textContent = '';
+      loginError.innerHTML = '';
       loginBox.style.display = 'none';
       appBox.style.display = 'block';
-      userInfoEl.textContent = `目前登入身分：${username}`;
+      userNameLabel.textContent = username;
     } catch (e) {
+      loginError.style.color = 'var(--brick)';
       loginError.textContent = '連線發生錯誤：' + e.message;
     }
   });
@@ -118,15 +529,13 @@
           method: 'POST',
           headers: { 'Authorization': `Bearer ${currentToken}` }
         });
-      } catch (e) {
-      }
+      } catch (e) { /* 忽略 */ }
     }
     currentToken = null;
-    currentUsername = null;
     appBox.style.display = 'none';
     loginBox.style.display = 'block';
-    resultEl.textContent = '';
-    statusEl.textContent = '';
+    resultArea.innerHTML = '';
+    statusMsg.textContent = '';
   });
 
   function requestOptimize(parts, token) {
@@ -147,11 +556,123 @@
     });
   }
 
+  function renderResult(result) {
+    resultArea.innerHTML = '';
+
+    if (result.status !== 'success') {
+      resultArea.innerHTML = `<div class="banner short">計算失敗：${escapeHtml(result.message || result.detail || '未知錯誤')}</div>`;
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    const summary = document.createElement('div');
+    summary.className = 'grand-summary';
+    summary.innerHTML = `
+      <div>
+        <div class="label">總金額（含運費）</div>
+        <div class="meta">${result.summary.total_sellers} 個賣家 · ${result.summary.total_sellers} 個包裹</div>
+      </div>
+      <div class="amount">$${Math.round(result.summary.grand_total).toLocaleString()}</div>
+    `;
+    frag.appendChild(summary);
+
+    (result.warnings || []).forEach(w => {
+      const b = document.createElement('div');
+      b.className = 'banner warn';
+      b.textContent = `${w.part}：${w.message || JSON.stringify(w)}`;
+      frag.appendChild(b);
+    });
+
+    const shortageEntries = Object.entries(result.shortage_parts || {});
+    shortageEntries.forEach(([part, s]) => {
+      const b = document.createElement('div');
+      b.className = 'banner short';
+      b.textContent = `${part} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個`;
+      frag.appendChild(b);
+    });
+
+    if (result.unresolved_parts && result.unresolved_parts.length > 0) {
+      const b = document.createElement('div');
+      b.className = 'banner short';
+      b.textContent = `完全找不到貨源：${result.unresolved_parts.join('、')}`;
+      frag.appendChild(b);
+    }
+
+    const bySeller = {};
+    (result.recommendations || []).forEach(r => {
+      const sid = r.seller_id || 'unknown';
+      if (!bySeller[sid]) bySeller[sid] = [];
+      bySeller[sid].push(r);
+    });
+
+    const sellersInfo = result.sellers || {};
+
+    Object.entries(bySeller).forEach(([sellerId, items]) => {
+      const info = sellersInfo[sellerId] || {};
+      const crate = document.createElement('div');
+      crate.className = 'crate';
+
+      const sellerName = items[0].seller_name || sellerId;
+
+      crate.innerHTML = `
+        <div class="crate-head">
+          <div>
+            <span class="tag">包裹 · ${sellerId}</span>
+            <div class="seller">${escapeHtml(sellerName)}</div>
+          </div>
+        </div>
+        <div class="crate-items"></div>
+        <div class="crate-foot">
+          <span class="breakdown">小計 $${(info.subtotal ?? '-')} + 運費 $${(info.shipping ?? '-')}</span>
+          <span class="total">$${(info.total ?? '-')}</span>
+        </div>
+      `;
+
+      const itemsBox = crate.querySelector('.crate-items');
+      items.forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        const lineTotal = (it.unit_price ?? 0) * (it.packs_bought ?? 1);
+        row.innerHTML = `
+          <div class="item-main">
+            <span class="item-part">${escapeHtml(it.part)}</span>
+            <div class="item-title"><a href="${it.url}" target="_blank" rel="noopener">${escapeHtml(it.item_title || '')}</a></div>
+            <div class="item-qty">單價 $${it.unit_price} × ${it.pack_qty} 個/包 · 買 ${it.packs_bought} 包</div>
+          </div>
+          <div class="item-price">$${lineTotal}</div>
+        `;
+        itemsBox.appendChild(row);
+      });
+
+      frag.appendChild(crate);
+    });
+
+    if (Object.keys(bySeller).length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = '沒有找到任何可購買的項目';
+      frag.appendChild(empty);
+    }
+
+    const details = document.createElement('details');
+    details.className = 'raw-json';
+    details.innerHTML = `<summary>原始資料（除錯用）</summary><pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+    frag.appendChild(details);
+
+    resultArea.appendChild(frag);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+
   submitBtn.addEventListener('click', async () => {
-    resultEl.textContent = '';
+    resultArea.innerHTML = '';
 
     if (!currentToken) {
-      statusEl.textContent = '請先登入';
+      statusMsg.textContent = '請先登入';
       return;
     }
 
@@ -159,28 +680,28 @@
     try {
       parts = JSON.parse(document.getElementById('partsInput').value);
     } catch (e) {
-      statusEl.textContent = '零件清單 JSON 格式錯誤：' + e.message;
+      statusMsg.textContent = '零件清單 JSON 格式錯誤：' + e.message;
       return;
     }
 
-    statusEl.textContent = '正在收集資料並計算，請稍候...（第一次可能要等後端喚醒，約 50 秒）';
+    statusMsg.textContent = '正在收集資料並計算，請稍候...（第一次可能要等後端喚醒，約 50 秒）';
     submitBtn.disabled = true;
 
     try {
       const result = await requestOptimize(parts, currentToken);
 
       if (result?.status === 'error' && result?.message?.includes('401')) {
-        statusEl.textContent = '登入已失效，請重新登入';
+        statusMsg.textContent = '登入已失效，請重新登入';
         currentToken = null;
         appBox.style.display = 'none';
         loginBox.style.display = 'block';
         return;
       }
 
-      statusEl.textContent = '完成！';
-      resultEl.textContent = JSON.stringify(result, null, 2);
+      statusMsg.textContent = '';
+      renderResult(result);
     } catch (e) {
-      statusEl.textContent = '發生錯誤：' + e.message;
+      statusMsg.textContent = '發生錯誤：' + e.message;
     } finally {
       submitBtn.disabled = false;
     }
