@@ -3,26 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>採購小幫手 · SHOTVAL FOUNDRY</title>
+<title>採購小幫手</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #0D0E11;            /* 深邃石墨黑 */
-    --panel: #14161B;         /* 鋼鐵工藝面板 */
-    --panel-border: #232730;  /* 沉穩邊線 */
-    --ink: #E6E8EC;           /* 純淨鈦白文字 */
-    --ink-soft: #7E8494;      /* 低彩度霧灰說明文字 */
-    --line: #1E2129;          /* 微細分隔線 */
-    --brick: #C94038;         /* 精神點綴朱紅 */
-    --brick-dark: #E04840;
-    --stud: #D4AF37;          /* 啞光金屬黃 */
-    --ok-bg: #122417;
-    --ok-ink: #52C472;
-    --warn-bg: #2B2011;
-    --warn-ink: #E0A845;
-    --input-bg: #0A0B0D;
+    --bg: #F2EFE8;
+    --panel: #FFFFFF;
+    --ink: #22201C;
+    --ink-soft: #6B655C;
+    --line: #DEDACF;
+    --brick: #C23B32;
+    --brick-dark: #9E2E27;
+    --stud: #E8B93B;
+    --ok-bg: #EEF3EA;
+    --ok-ink: #4C6E3F;
+    --warn-bg: #FBF0E2;
+    --warn-ink: #96601A;
   }
 
   * { box-sizing: border-box; }
@@ -31,277 +29,167 @@
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-    line-height: 1.6;
-    letter-spacing: 0.02em;
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.5;
   }
 
-  .wrap { 
-    max-width: 960px; 
-    margin: 0 auto; 
-    padding: 60px 24px 100px; 
-  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
 
   header.page-head {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 60px;
-    padding-top: 40px;
-    gap: 16px;
-    text-align: center;
-  }
-
-  .brand-tag {
-    font-family: 'Cinzel', serif;
-    font-size: 36px;
-    font-weight: 600;
-    letter-spacing: 0.25em;
-    color: var(--ink);
-    opacity: 1;
-    margin-bottom: 4px;
-    text-transform: none;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   h1 {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 300;
-    font-size: 36px;
-    letter-spacing: 0.22em;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.02em;
     margin: 0;
-    color: var(--ink-soft);
   }
+  h1 .dot { color: var(--brick); }
 
   .ext-status {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    letter-spacing: 0.12em;
-    padding: 6px 18px;
+    font-size: 12px;
+    padding: 4px 10px;
     border-radius: 20px;
-    background: transparent;
-    border: 1px solid var(--panel-border);
-    color: var(--ink-soft);
+    background: var(--panel);
+    border: 1px solid var(--line);
   }
-  .ext-status.ok { 
-    color: var(--ok-ink); 
-    background: var(--ok-bg); 
-    border-color: rgba(82, 196, 114, 0.2); 
-  }
+  .ext-status.ok { color: var(--ok-ink); background: var(--ok-bg); border-color: transparent; }
 
   .panel {
     background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    padding: 48px 56px;
-    margin-bottom: 32px;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
   }
 
   .panel h2 {
-    font-family: 'Cinzel', serif;
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0 0 28px;
+    font-family: 'Archivo', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 16px;
     text-transform: uppercase;
-    letter-spacing: 0.25em;
-    color: var(--ink);
-    opacity: 0.9;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
   }
-
-  .row { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 24px; 
-    margin-bottom: 32px; 
-  }
-  .row > div { width: 100%; }
 
   label.field-label {
     display: block;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--ink);
-    margin-bottom: 12px;
-    letter-spacing: 0.08em;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+    font-weight: 500;
   }
 
   input[type="text"], input[type="password"], textarea {
     width: 100%;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    padding: 16px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
     border: 1px solid var(--line);
-    border-radius: 6px;
-    background: var(--input-bg);
-    color: var(--ink);
-    transition: all 0.2s ease;
-  }
-  textarea { min-height: 140px; resize: vertical; }
-  input:focus, textarea:focus { 
-    outline: none;
-    border-color: var(--ink-soft); 
-  }
-
-  .pwd-wrap {
-    position: relative;
-    width: 100%;
-  }
-  .pwd-wrap input {
-    padding-right: 52px;
-  }
-
-  .pwd-toggle {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    color: var(--ink-soft);
-    cursor: pointer;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 5;
-    transition: color 0.2s;
-  }
-  .pwd-toggle:hover {
+    border-radius: 8px;
+    background: #FCFBF8;
     color: var(--ink);
   }
-  .pwd-toggle svg {
-    pointer-events: none;
-  }
+  textarea { font-family: 'JetBrains Mono', monospace; font-size: 13px; min-height: 120px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--brick); outline-offset: 1px; }
+
+  .row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 160px; }
 
   button {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 11px 20px;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    letter-spacing: 0.01em;
   }
-  .btn-primary { 
-    background: var(--ink); 
-    color: var(--bg); 
-    font-size: 15px;
-    font-weight: 500;
-    padding: 10px 16px;
-    letter-spacing: 0.08em;
-    border-radius: 6px;
-  }
-  .btn-primary:hover { 
-    background: #FFFFFF; 
-    opacity: 0.95;
-  }
-  .btn-primary:disabled { 
-    background: #252830; 
-    color: #525766; 
-    cursor: not-allowed; 
-  }
-  .btn-ghost { 
-    background: transparent; 
-    color: var(--ink-soft); 
-    border: 1px solid var(--line); 
-    padding: 8px 16px;
-    font-size: 13px;
-    border-radius: 4px;
-  }
-  .btn-ghost:hover { border-color: var(--ink-soft); color: var(--ink); }
-  .error-msg { color: var(--brick); font-size: 13px; margin-top: 16px; }
-  .status-msg { color: var(--ink-soft); font-size: 13px; margin: 16px 0; }
-  .login-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 16px;
-    font-size: 16px;
-    color: var(--ink-soft);
-    letter-spacing: 0.05em;
-  }
+  .btn-primary { background: var(--brick); color: white; }
+  .btn-primary:hover { background: var(--brick-dark); }
+  .btn-primary:disabled { background: #C9C2B4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--ink-soft); }
 
-  .spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--panel-border);
-    border-top-color: var(--ink);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  .error-msg { color: var(--brick-dark); font-size: 13px; margin-top: 10px; }
+  .status-msg { color: var(--ink-soft); font-size: 13px; margin: 14px 0; }
 
   .user-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     font-size: 13px;
     color: var(--ink-soft);
-    letter-spacing: 0.05em;
   }
   .user-bar strong { color: var(--ink); font-family: 'JetBrains Mono', monospace; }
 
   #appBox { display: none; }
 
+  /* ---- 結果區：包裹卡片 ---- */
   .grand-summary {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #000000;
+    background: var(--ink);
     color: white;
-    border: 1px solid var(--panel-border);
-    border-radius: 8px;
-    padding: 24px 28px;
-    margin: 32px 0 24px;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin: 28px 0 20px;
   }
-  .grand-summary .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; }
-  .grand-summary .amount { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 500; color: var(--stud); }
-  .grand-summary .meta { font-size: 11px; opacity: 0.7; margin-top: 4px; }
+  .grand-summary .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+  .grand-summary .amount { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 600; }
+  .grand-summary .meta { font-size: 12px; opacity: 0.7; margin-top: 2px; }
 
   .crate {
     background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 8px;
-    margin-bottom: 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 16px;
     overflow: hidden;
   }
   .crate-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 24px;
-    background: #101216;
-    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    background: repeating-linear-gradient(135deg, #FAF8F3, #FAF8F3 10px, #F4F1EA 10px, #F4F1EA 20px);
+    border-bottom: 1px dashed var(--line);
   }
   .crate-head .tag {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     background: var(--stud);
-    color: #0D0E11;
+    color: #4A3B0E;
     padding: 2px 8px;
-    border-radius: 2px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    border-radius: 4px;
+    font-weight: 600;
   }
   .crate-head .seller {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    margin-top: 6px;
-    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    margin-top: 4px;
   }
 
-  .crate-items { padding: 8px 24px; }
+  .crate-items { padding: 4px 20px; }
   .item-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 16px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--line);
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #F0EDE5;
   }
   .item-row:last-child { border-bottom: none; }
   .item-main { flex: 1; min-width: 0; }
@@ -309,11 +197,11 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: var(--ink-soft);
-    background: #1E2129;
+    background: #F0EDE5;
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 3px;
-    margin-bottom: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
   }
   .item-title {
     font-size: 13px;
@@ -321,12 +209,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .item-title a { color: var(--ink); text-decoration: none; transition: color 0.2s; }
-  .item-title a:hover { color: var(--ink-soft); text-decoration: underline; }
-  .item-qty { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+  .item-title a { color: var(--ink); text-decoration: none; }
+  .item-title a:hover { color: var(--brick); text-decoration: underline; }
+  .item-qty { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
   .item-price {
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 14px;
     white-space: nowrap;
   }
@@ -334,38 +222,148 @@
   .crate-foot {
     display: flex;
     justify-content: space-between;
-    padding: 14px 24px;
-    background: var(--input-bg);
+    padding: 12px 20px;
+    background: #FAF8F3;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    border-top: 1px solid var(--line);
+    font-size: 13px;
   }
-  .crate-foot .total { font-weight: 600; font-size: 14px; color: var(--ink); }
+  .crate-foot .total { font-weight: 700; font-size: 15px; }
   .crate-foot .breakdown { color: var(--ink-soft); }
-  .banner {
-    border-radius: 6px;
-    padding: 14px 18px;
-    font-size: 12px;
-    margin-bottom: 16px;
-    letter-spacing: 0.02em;
-  }
-  .banner.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #4D381A; }
-  .banner.short { background: #2B1416; color: #FF9B9E; border: 1px solid #522023; }
 
-  details.raw-json { margin-top: 24px; font-size: 11px; color: var(--ink-soft); }
+  .banner {
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .banner.warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .banner.short { background: #FBEAE8; color: var(--brick-dark); }
+
+  details.raw-json { margin-top: 20px; font-size: 12px; color: var(--ink-soft); }
   details.raw-json pre {
-    background: var(--input-bg);
+    background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 16px;
+    border-radius: 8px;
+    padding: 12px;
     overflow-x: auto;
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     white-space: pre-wrap;
-    color: var(--ink-soft);
   }
 
-  .empty-state { text-align: center; color: var(--ink-soft); padding: 40px 0; font-size: 12px; letter-spacing: 0.05em; }
+  .empty-state { text-align: center; color: var(--ink-soft); padding: 30px 0; font-size: 13px; }
+
+  /* ---- 輸入模式切換 ---- */
+  .mode-switch {
+    display: inline-flex;
+    background: #F0EDE5;
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 18px;
+  }
+  .mode-switch button {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 16px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-soft);
+  }
+  .mode-switch button.active { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+  .mode-panel { display: none; }
+  .mode-panel.active { display: block; }
+
+  /* ---- 手動輸入表格 ---- */
+  table.parts-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  table.parts-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    padding: 0 8px 8px;
+    font-weight: 600;
+  }
+  table.parts-table td { padding: 4px; }
+  table.parts-table input {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  table.parts-table td.qty-cell input { text-align: center; }
+  table.parts-table td.del-cell { width: 36px; text-align: center; }
+  .row-del-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .row-del-btn:hover { color: var(--brick); }
+
+  .add-row-btn {
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--ink-soft);
+    width: 100%;
+    padding: 10px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .add-row-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  /* ---- Excel 上傳 ---- */
+  .drop-zone {
+    border: 2px dashed var(--line);
+    border-radius: 10px;
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 16px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--brick); background: #FBF3F1; }
+  .drop-zone strong { color: var(--ink); }
+  .drop-zone input[type="file"] { display: none; }
+
+  .preview-table-wrap { max-height: 260px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px; }
+  table.preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.preview-table th {
+    position: sticky; top: 0;
+    background: #F7F5F0;
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--line);
+  }
+  table.preview-table td { padding: 7px 12px; border-bottom: 1px solid #F0EDE5; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  table.preview-table tr:last-child td { border-bottom: none; }
+
+  .file-summary { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 10px; }
+  .file-summary .fname { font-weight: 600; }
+  .clear-file-btn { background: none; border: none; color: var(--ink-soft); text-decoration: underline; cursor: pointer; font-size: 12px; padding: 0; }
+
+  .or-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 12px;
+    margin: 20px 0;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--line);
+  }
+  .or-divider span { padding: 0 12px; }
 </style>
 </head>
 <body>
@@ -373,13 +371,13 @@
 <div class="wrap">
 
   <header class="page-head">
-    <div class="brand-tag">Shotval Foundry</div>
-    <h1>採購小幫手</h1>
+    <h1>採購小幫手<span class="dot">.</span></h1>
     <span class="ext-status" id="extStatus">擴充功能：尚未偵測到</span>
   </header>
 
+  <!-- 登入區塊 -->
   <div class="panel" id="loginBox">
-    <h2>SYSTEM ACCESS</h2>
+    <h2>登入</h2>
     <div class="row">
       <div>
         <label class="field-label" for="usernameInput">帳號</label>
@@ -387,35 +385,48 @@
       </div>
       <div>
         <label class="field-label" for="passwordInput">密碼</label>
-        <div class="pwd-wrap">
-          <input type="password" id="passwordInput" autocomplete="current-password">
-          <button type="button" class="pwd-toggle" id="togglePwdBtn" aria-label="切換密碼顯示">
-            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-          </button>
-        </div>
+        <input type="password" id="passwordInput" autocomplete="current-password">
       </div>
     </div>
     <button class="btn-primary" id="loginBtn">登入</button>
     <div class="error-msg" id="loginError"></div>
   </div>
 
+  <!-- 登入後主功能區 -->
   <div id="appBox">
     <div class="user-bar">
-      <div>OPERATOR: <strong id="userNameLabel"></strong></div>
+      <div>登入身分：<strong id="userNameLabel"></strong></div>
       <button class="btn-ghost" id="logoutBtn">登出</button>
     </div>
 
     <div class="panel">
-      <h2>PARTS LIST (JSON)</h2>
-      <label class="field-label" for="partsInput">零件需求數據</label>
-      <textarea id="partsInput">[
-  { "part_number": "3001", "color": "紅", "required_qty": 2 },
-  { "part_number": "3002", "color": "藍", "required_qty": 1 }
-]</textarea>
-      <br><br>
+      <h2>零件清單</h2>
+
+      <label class="field-label">手動輸入</label>
+      <table class="parts-table">
+        <thead>
+          <tr>
+            <th style="width:32%">零件編號</th>
+            <th style="width:32%">顏色</th>
+            <th style="width:20%">數量</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="manualRows"></tbody>
+      </table>
+      <button class="add-row-btn" id="addRowBtn">+ 新增一列</button>
+
+      <div class="or-divider"><span>或</span></div>
+
+      <label class="field-label">上傳 Excel / CSV（若已上傳檔案，將以檔案內容為準，忽略上方手動輸入）</label>
+      <div class="drop-zone" id="dropZone">
+        <div><strong>點擊選擇檔案</strong>，或將 Excel / CSV 拖曳到這裡</div>
+        <div style="margin-top:4px; font-size:12px;">需包含欄位：零件編號、數量、顏色</div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      </div>
+      <div id="excelPreviewArea"></div>
+
+      <br>
       <button class="btn-primary" id="submitBtn">送出並計算</button>
       <div class="status-msg" id="statusMsg"></div>
     </div>
@@ -427,6 +438,7 @@
 
 <script>
   const BACKEND_URL = "https://lego-buying-backend.onrender.com";
+
   let currentToken = null;
 
   const extStatusEl = document.getElementById('extStatus');
@@ -438,25 +450,152 @@
   const resultArea = document.getElementById('resultArea');
   const submitBtn = document.getElementById('submitBtn');
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const passwordInput = document.getElementById('passwordInput');
-    const togglePwdBtn = document.getElementById('togglePwdBtn');
-    const eyeIcon = document.getElementById('eyeIcon');
+  // ===== 手動輸入表格 =====
+  const manualRows = document.getElementById('manualRows');
+  const addRowBtn = document.getElementById('addRowBtn');
 
-    if (togglePwdBtn && passwordInput) {
-      togglePwdBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+  function addManualRow(partNumber = '', color = '', qty = 1) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="cell-part" placeholder="例如 3001" value="${escapeAttr(partNumber)}"></td>
+      <td><input type="text" class="cell-color" placeholder="例如 紅" value="${escapeAttr(color)}"></td>
+      <td class="qty-cell"><input type="number" class="cell-qty" min="1" value="${qty}"></td>
+      <td class="del-cell"><button type="button" class="row-del-btn" title="刪除">×</button></td>
+    `;
+    tr.querySelector('.row-del-btn').addEventListener('click', () => tr.remove());
+    manualRows.appendChild(tr);
+  }
 
-        const isPassword = passwordInput.type === 'password';
-        passwordInput.type = isPassword ? 'text' : 'password';
+  addRowBtn.addEventListener('click', () => addManualRow());
+  // 預設先給兩列方便使用
+  addManualRow('3001', '紅', 2);
+  addManualRow('3002', '藍', 1);
 
-        eyeIcon.innerHTML = isPassword
-          ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`
-          : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
-      });
-    }
+  function collectManualParts() {
+    const parts = [];
+    manualRows.querySelectorAll('tr').forEach(tr => {
+      const partNumber = tr.querySelector('.cell-part').value.trim();
+      const color = tr.querySelector('.cell-color').value.trim() || 'None';
+      const qty = parseInt(tr.querySelector('.cell-qty').value, 10) || 1;
+      if (partNumber) {
+        parts.push({ part_number: partNumber, color, required_qty: qty });
+      }
+    });
+    return parts;
+  }
+
+  function escapeAttr(str) {
+    return String(str).replace(/"/g, '&quot;');
+  }
+
+  // ===== Excel 上傳解析（對應 file_handler.py 的欄位邏輯） =====
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const excelPreviewArea = document.getElementById('excelPreviewArea');
+  let parsedExcelParts = [];
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) handleExcelFile(e.dataTransfer.files[0]);
   });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) handleExcelFile(e.target.files[0]);
+  });
+
+  function handleExcelFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        const result = parseRowsToParts(rows);
+
+        if (result.error) {
+          excelPreviewArea.innerHTML = `<div class="banner short">${escapeHtml(result.error)}</div>`;
+          parsedExcelParts = [];
+          return;
+        }
+
+        parsedExcelParts = result.parts;
+        renderExcelPreview(file.name, parsedExcelParts);
+      } catch (err) {
+        excelPreviewArea.innerHTML = `<div class="banner short">檔案讀取失敗：${escapeHtml(err.message)}</div>`;
+        parsedExcelParts = [];
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // 對應 file_handler.py 的欄位對應：零件編號→part_number，數量→quantity，顏色→color
+  function parseRowsToParts(rows) {
+    if (!rows || rows.length === 0) {
+      return { error: '檔案內沒有資料' };
+    }
+
+    const headers = Object.keys(rows[0]).map(h => h.trim());
+    const required = ['零件編號', '數量', '顏色'];
+    const missing = required.filter(col => !headers.includes(col));
+    if (missing.length > 0) {
+      return { error: `檔案缺少必要欄位：${missing.join('、')}` };
+    }
+
+    const parts = [];
+    for (const row of rows) {
+      const partNumber = String(row['零件編號'] ?? '').trim();
+      if (!partNumber || partNumber.toLowerCase() === 'nan') continue;
+
+      let qty = parseInt(row['數量'], 10);
+      if (isNaN(qty) || qty <= 0) qty = 1;
+
+      let color = String(row['顏色'] ?? '').trim();
+      if (!color || color.toLowerCase() === 'nan') color = 'None';
+
+      parts.push({ part_number: partNumber, color, required_qty: qty });
+    }
+
+    if (parts.length === 0) {
+      return { error: '解析完成，但沒有找到有效的零件資料' };
+    }
+
+    return { parts };
+  }
+
+  function renderExcelPreview(fileName, parts) {
+    const rowsHtml = parts.map(p => `
+      <tr>
+        <td>${escapeHtml(p.part_number)}</td>
+        <td>${escapeHtml(p.color)}</td>
+        <td>${p.required_qty}</td>
+      </tr>
+    `).join('');
+
+    excelPreviewArea.innerHTML = `
+      <div class="file-summary">
+        <span>已解析 <span class="fname">${escapeHtml(fileName)}</span> · 共 ${parts.length} 筆零件</span>
+        <button class="clear-file-btn" id="clearFileBtn">清除重新上傳</button>
+      </div>
+      <div class="preview-table-wrap">
+        <table class="preview-table">
+          <thead><tr><th>零件編號</th><th>顏色</th><th>數量</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+
+    document.getElementById('clearFileBtn').addEventListener('click', () => {
+      parsedExcelParts = [];
+      fileInput.value = '';
+      excelPreviewArea.innerHTML = '';
+    });
+  }
 
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
@@ -469,18 +608,14 @@
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const username = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
-    
-    loginError.className = 'login-status';
-    loginError.innerHTML = '';
+    loginError.textContent = '';
 
     if (!username || !password) {
-      loginError.style.color = 'var(--brick)';
       loginError.textContent = '請輸入帳號與密碼';
       return;
     }
 
-    loginError.style.color = 'var(--ink-soft)';
-    loginError.innerHTML = `<span class="spinner"></span><span>登入中</span>`;
+    loginError.textContent = '登入中...（若後端剛喚醒可能需要等待較久）';
 
     try {
       const resp = await fetch(`${BACKEND_URL}/api/login`, {
@@ -491,18 +626,16 @@
       const data = await resp.json();
 
       if (!resp.ok) {
-        loginError.style.color = 'var(--brick)';
         loginError.textContent = data.detail || '登入失敗';
         return;
       }
 
       currentToken = data.token;
-      loginError.innerHTML = '';
+      loginError.textContent = '';
       loginBox.style.display = 'none';
       appBox.style.display = 'block';
       userNameLabel.textContent = username;
     } catch (e) {
-      loginError.style.color = 'var(--brick)';
       loginError.textContent = '連線發生錯誤：' + e.message;
     }
   });
@@ -541,6 +674,7 @@
     });
   }
 
+  // ---- 結果渲染 ----
   function renderResult(result) {
     resultArea.innerHTML = '';
 
@@ -550,6 +684,8 @@
     }
 
     const frag = document.createDocumentFragment();
+
+    // 總計條
     const summary = document.createElement('div');
     summary.className = 'grand-summary';
     summary.innerHTML = `
@@ -561,6 +697,7 @@
     `;
     frag.appendChild(summary);
 
+    // 警告/缺貨提示
     (result.warnings || []).forEach(w => {
       const b = document.createElement('div');
       b.className = 'banner warn';
@@ -583,6 +720,7 @@
       frag.appendChild(b);
     }
 
+    // 依賣家分組的 recommendations
     const bySeller = {};
     (result.recommendations || []).forEach(r => {
       const sid = r.seller_id || 'unknown';
@@ -639,6 +777,7 @@
       frag.appendChild(empty);
     }
 
+    // 原始 JSON（除錯用，收合）
     const details = document.createElement('details');
     details.className = 'raw-json';
     details.innerHTML = `<summary>原始資料（除錯用）</summary><pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
@@ -662,14 +801,17 @@
     }
 
     let parts;
-    try {
-      parts = JSON.parse(document.getElementById('partsInput').value);
-    } catch (e) {
-      statusMsg.textContent = '零件清單 JSON 格式錯誤：' + e.message;
-      return;
+    if (parsedExcelParts.length > 0) {
+      parts = parsedExcelParts;
+    } else {
+      parts = collectManualParts();
+      if (parts.length === 0) {
+        statusMsg.textContent = '請至少輸入一筆零件編號，或上傳 Excel / CSV 檔案';
+        return;
+      }
     }
 
-    statusMsg.textContent = '正在收集資料並計算，請稍候...（第一次可能要等後端喚醒，約 50 秒）';
+    statusMsg.textContent = `正在收集 ${parts.length} 筆零件資料並計算，請稍候...（第一次可能要等後端喚醒，約 50 秒）`;
     submitBtn.disabled = true;
 
     try {
@@ -692,5 +834,6 @@
     }
   });
 </script>
+
 </body>
 </html>
