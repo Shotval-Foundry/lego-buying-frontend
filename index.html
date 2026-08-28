@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Shotval Foundry 職人極致深色調 */
     --bg: #0D0E11;            /* 深邃石墨黑 */
     --panel: #14161B;         /* 鋼鐵工藝面板 */
     --panel-border: #232730;  /* 沉穩邊線 */
@@ -37,14 +36,12 @@
     letter-spacing: 0.02em;
   }
 
-  /* 放寬整體容器 */
   .wrap { 
     max-width: 960px; 
     margin: 0 auto; 
     padding: 60px 24px 100px; 
   }
 
-  /* ---- Header 職人美學佈局 ---- */
   header.page-head {
     display: flex;
     flex-direction: column;
@@ -64,7 +61,7 @@
     color: var(--ink);
     opacity: 1;
     margin-bottom: 4px;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   h1 {
@@ -78,9 +75,9 @@
 
   .ext-status {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 14px;
     letter-spacing: 0.12em;
-    padding: 4px 14px;
+    padding: 6px 18px;
     border-radius: 20px;
     background: transparent;
     border: 1px solid var(--panel-border);
@@ -92,7 +89,6 @@
     border-color: rgba(82, 196, 114, 0.2); 
   }
 
-  /* ---- 面板與表單區塊 ---- */
   .panel {
     background: var(--panel);
     border: 1px solid var(--panel-border);
@@ -113,7 +109,6 @@
     opacity: 0.9;
   }
 
-  /* 上下排列結構 */
   .row { 
     display: flex; 
     flex-direction: column; 
@@ -131,7 +126,6 @@
     letter-spacing: 0.08em;
   }
 
-  /* ---- 輸入框與密碼眼睛定位 ---- */
   input[type="text"], input[type="password"], textarea {
     width: 100%;
     font-family: 'JetBrains Mono', monospace;
@@ -181,7 +175,6 @@
     pointer-events: none;
   }
 
-  /* ---- 按鈕樣式 ---- */
   button {
     font-family: 'Plus Jakarta Sans', sans-serif;
     border: none;
@@ -215,11 +208,8 @@
     border-radius: 4px;
   }
   .btn-ghost:hover { border-color: var(--ink-soft); color: var(--ink); }
-
   .error-msg { color: var(--brick); font-size: 13px; margin-top: 16px; }
   .status-msg { color: var(--ink-soft); font-size: 13px; margin: 16px 0; }
-
-  /* ---- 登入狀態與 Spinner 動畫 ---- */
   .login-status {
     display: inline-flex;
     align-items: center;
@@ -256,7 +246,6 @@
 
   #appBox { display: none; }
 
-  /* ---- 結果區卡片 ---- */
   .grand-summary {
     display: flex;
     justify-content: space-between;
@@ -353,7 +342,6 @@
   }
   .crate-foot .total { font-weight: 600; font-size: 14px; color: var(--ink); }
   .crate-foot .breakdown { color: var(--ink-soft); }
-
   .banner {
     border-radius: 6px;
     padding: 14px 18px;
@@ -385,12 +373,11 @@
 <div class="wrap">
 
   <header class="page-head">
-    <div class="brand-tag">SHOTVAL FOUNDRY</div>
+    <div class="brand-tag">Shotval Foundry</div>
     <h1>採購小幫手</h1>
     <span class="ext-status" id="extStatus">擴充功能：尚未偵測到</span>
   </header>
 
-  <!-- 登入區塊 -->
   <div class="panel" id="loginBox">
     <h2>SYSTEM ACCESS</h2>
     <div class="row">
@@ -415,7 +402,6 @@
     <div class="error-msg" id="loginError"></div>
   </div>
 
-  <!-- 登入後主功能區 -->
   <div id="appBox">
     <div class="user-bar">
       <div>OPERATOR: <strong id="userNameLabel"></strong></div>
@@ -452,7 +438,6 @@
   const resultArea = document.getElementById('resultArea');
   const submitBtn = document.getElementById('submitBtn');
 
-  // DOM 載入完成後綁定密碼切換
   document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('passwordInput');
     const togglePwdBtn = document.getElementById('togglePwdBtn');
@@ -707,6 +692,5 @@
     }
   });
 </script>
-
 </body>
 </html>
