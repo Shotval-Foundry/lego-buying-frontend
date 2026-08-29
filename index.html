@@ -1098,7 +1098,7 @@
     resultArea.innerHTML = '';
 
     if (!currentToken) {
-      statusMsg.textContent = '請先登入';
+      resultArea.innerHTML = `<div class="banner short">請先登入</div>`;
       return;
     }
 
@@ -1109,7 +1109,7 @@
 
     let parts = parsedExcelParts.length > 0 ? parsedExcelParts : collectManualParts();
     if (parts.length === 0) {
-      statusMsg.textContent = '請至少輸入一筆零件編號，或上傳 Excel / CSV 檔案';
+      resultArea.innerHTML = `<div class="banner short">請至少輸入一筆零件編號，或上傳 Excel / CSV 檔案</div>`;
       return;
     }
 
