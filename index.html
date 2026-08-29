@@ -484,6 +484,15 @@
     <span class="ext-status" id="extStatus">擴充功能：尚未偵測到</span>
   </header>
 
+  <div class="panel" id="extRequiredNotice" style="display:none;">
+    <h2>需要先安裝並啟用擴充功能</h2>
+    <p style="color: var(--ink-soft); font-size: 14px; line-height: 1.7;">
+      目前偵測不到「Lego Buying Foundry Helper」擴充功能，本工具需要透過它才能查詢零件報價。<br><br>
+      請先安裝並啟用擴充功能，安裝完成後，<strong style="color: var(--ink);">重新整理本頁面</strong>即可繼續使用。
+    </p>
+    <button class="btn-ghost" id="recheckExtBtn" style="margin-top: 12px;">重新檢查</button>
+  </div>
+
   <div class="panel" id="authBox">
     <div class="auth-tabs">
       <button class="auth-tab active" id="tabLoginBtn">登入</button>
@@ -625,6 +634,7 @@
 
   const extStatusEl = document.getElementById('extStatus');
   const authBox = document.getElementById('authBox');
+  const extRequiredNotice = document.getElementById('extRequiredNotice');
   const appBox = document.getElementById('appBox');
   const loginError = document.getElementById('loginError');
   const regError = document.getElementById('regError');
@@ -637,6 +647,33 @@
   const tabRegBtn = document.getElementById('tabRegBtn');
   const loginFormSection = document.getElementById('loginFormSection');
   const regFormSection = document.getElementById('regFormSection');
+
+  let extensionDetected = false;
+
+  // 頁面載入時的擋關判斷：content-script 只會在頁面載入當下被注入，
+  // 所以這裡用「等待一小段時間看有沒有收到 READY」來判斷，而不是事後才即時偵測。
+  function lockBehindExtensionGate() {
+    authBox.style.display = 'none';
+    extRequiredNotice.style.display = 'block';
+  }
+
+  function unlockExtensionGate() {
+    extRequiredNotice.style.display = 'none';
+    // 只有在使用者還沒登入（appBox 還沒顯示）時，才把登入表單打開
+    if (appBox.style.display !== 'block') {
+      authBox.style.display = 'block';
+    }
+  }
+
+  setTimeout(() => {
+    if (!extensionDetected) {
+      lockBehindExtensionGate();
+    }
+  }, 1500);
+
+  document.getElementById('recheckExtBtn').addEventListener('click', () => {
+    location.reload();
+  });
 
   tabLoginBtn.addEventListener('click', () => {
     tabLoginBtn.classList.add('active');
@@ -938,8 +975,10 @@
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     if (event.data?.type === 'LEGO_HELPER_READY') {
+      extensionDetected = true;
       extStatusEl.textContent = '擴充功能：已連接 ✓';
       extStatusEl.classList.add('ok');
+      unlockExtensionGate();
     }
   });
 
