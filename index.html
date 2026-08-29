@@ -677,12 +677,12 @@
   const manualRows = document.getElementById('manualRows');
   const addRowBtn = document.getElementById('addRowBtn');
 
-  function addManualRow(partNumber = '', color = '', qty = 1) {
+  function addManualRow(partNumber = '', color = '', qty = '') {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="text" class="cell-part" placeholder="例如 3001" value="${escapeAttr(partNumber)}"></td>
       <td><input type="text" class="cell-color" placeholder="例如 紅" value="${escapeAttr(color)}"></td>
-      <td class="qty-cell"><input type="number" class="cell-qty" min="1" value="${qty}"></td>
+      <td class="qty-cell"><input type="number" class="cell-qty" min="1" placeholder="1" value="${qty}"></td>
       <td class="del-cell"><button type="button" class="row-del-btn" title="刪除">×</button></td>
     `;
     tr.querySelector('.row-del-btn').addEventListener('click', () => tr.remove());
@@ -690,8 +690,7 @@
   }
 
   addRowBtn.addEventListener('click', () => addManualRow());
-  addManualRow('3001', '紅', 2);
-  addManualRow('3002', '藍', 1);
+  addManualRow();
 
   function collectManualParts() {
     const parts = [];
@@ -1031,6 +1030,13 @@
       b.textContent = `${part} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個`;
       frag.appendChild(b);
     });
+
+    if (result.unresolved_parts && result.unresolved_parts.length > 0) {
+      const b = document.createElement('div');
+      b.className = 'banner short';
+      b.textContent = `完全找不到貨源，請確認零件編號或顏色是否正確：${result.unresolved_parts.join('、')}`;
+      frag.appendChild(b);
+    }
 
     const bySeller = {};
     (result.recommendations || []).forEach(r => {
