@@ -1103,7 +1103,7 @@
     }
 
     if (!extStatusEl.classList.contains('ok')) {
-    statusMsg.textContent = '請先確認擴充功能已安裝並連接，再重新整理頁面';
+    resultArea.innerHTML = `<div class="banner short">請先確認擴充功能已安裝並連接，再重新整理頁面</div>`;
     return;
   }
 
