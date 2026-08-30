@@ -1234,6 +1234,20 @@
       });
       statusMsg.textContent = '';
       progressWrap.style.display = 'none';
+
+      const isAuthExpired = result?.status === 'error'
+        && typeof result.message === 'string'
+        && (result.message.includes('401') || result.message.includes('登入已失效'));
+
+      if (isAuthExpired) {
+        currentToken = null;
+        appBox.style.display = 'none';
+        authBox.style.display = 'block';
+        loginError.style.color = 'var(--brick)';
+        loginError.textContent = '登入已逾時或失效，請重新登入';
+        return;
+      }
+
       renderResult(result);
     } catch (e) {
       statusMsg.textContent = '';
