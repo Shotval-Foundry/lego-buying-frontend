@@ -619,6 +619,12 @@
       <br><br>
       <button class="btn-primary" id="submitBtn">送出並計算</button>
       <div class="status-msg" id="statusMsg"></div>
+      <div id="progressWrap" style="display:none; margin-top: 10px;">
+        <div style="background: var(--input-bg); border-radius: 6px; height: 8px; overflow: hidden;">
+          <div id="progressBarFill" style="background: var(--ink); height: 100%; width: 0%; transition: width 0.2s;"></div>
+        </div>
+        <div id="progressText" style="font-size: 12px; color: var(--ink-soft); margin-top: 6px;"></div>
+      </div>
     </div>
 
     <div id="resultArea"></div>
@@ -1017,25 +1023,42 @@
     return connected;
   }
 
-  function requestOptimize(parts, token) {
+  function requestOptimize(parts, token, onProgress) {
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Error：擴充功能沒有回應，請確認是否已安裝並重新整理頁面'));
-      }, 60000);
+      // 判斷「卡住」的方式改成：多久沒有收到任何進度更新（含開始那一刻），
+      // 而不是給整個任務一個固定的總時間上限。
+      // 這樣資料量再大，只要還在正常推進，就不會被誤判逾時。
+      const STALL_LIMIT_MS = 90000; // 90 秒沒有任何動靜才視為卡住
+      let stallTimer = null;
+
+      function resetStallTimer() {
+        if (stallTimer) clearTimeout(stallTimer);
+        stallTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          reject(new Error('處理已停滯超過 90 秒，請確認擴充功能是否正常運作，或重新整理頁面後再試一次'));
+        }, STALL_LIMIT_MS);
+      }
 
       function handler(event) {
+        if (event.data?.type === 'LEGO_HELPER_PROGRESS') {
+          resetStallTimer();
+          if (onProgress) onProgress(event.data.completed, event.data.total);
+          return;
+        }
         if (event.data?.type === 'LEGO_HELPER_RESPONSE') {
-          clearTimeout(timeout);
+          clearTimeout(stallTimer);
           window.removeEventListener('message', handler);
           resolve(event.data.payload);
         }
       }
+
       window.addEventListener('message', handler);
-      window.postMessage({ 
-        type: 'LEGO_HELPER_REQUEST', 
-        parts, 
-        token, 
-        blacklist: Array.from(userBlacklist) 
+      resetStallTimer();
+      window.postMessage({
+        type: 'LEGO_HELPER_REQUEST',
+        parts,
+        token,
+        blacklist: Array.from(userBlacklist)
       }, '*');
     });
   }
@@ -1196,12 +1219,25 @@
 
     statusMsg.textContent = `正在收集 ${parts.length} 筆零件資料並計算，請稍候...`;
 
+    const progressWrap = document.getElementById('progressWrap');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const progressText = document.getElementById('progressText');
+    progressWrap.style.display = 'block';
+    progressBarFill.style.width = '0%';
+    progressText.textContent = `0 / ${parts.length}`;
+
     try {
-      const result = await requestOptimize(parts, currentToken);
+      const result = await requestOptimize(parts, currentToken, (completed, total) => {
+        const pct = Math.round((completed / total) * 100);
+        progressBarFill.style.width = pct + '%';
+        progressText.textContent = `已完成 ${completed} / ${total} 筆`;
+      });
       statusMsg.textContent = '';
+      progressWrap.style.display = 'none';
       renderResult(result);
     } catch (e) {
       statusMsg.textContent = '';
+      progressWrap.style.display = 'none';
       resultArea.innerHTML = `<div class="banner short">發生錯誤：${escapeHtml(e.message)}</div>`;
     } finally {
       submitBtn.disabled = false;
