@@ -635,6 +635,54 @@
 <script>
   const BACKEND_URL = "https://lego-buying-backend.onrender.com";
   let currentToken = null;
+
+  // ===== 保活心跳 + 閒置自動登出 =====
+  const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;   // 5 分鐘打一次心跳，保持後端不休眠
+  const IDLE_LOGOUT_MS = 20 * 60 * 1000;          // 20 分鐘沒有「送出並計算」就自動登出
+  let heartbeatTimer = null;
+  let idleLogoutTimer = null;
+
+  function startHeartbeat() {
+    stopHeartbeat();
+    heartbeatTimer = setInterval(() => {
+      fetch(`${BACKEND_URL}/`).catch(() => { /* 心跳失敗不影響使用，忽略即可 */ });
+    }, HEARTBEAT_INTERVAL_MS);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+  }
+
+  function resetIdleLogoutTimer() {
+    if (idleLogoutTimer) clearTimeout(idleLogoutTimer);
+    idleLogoutTimer = setTimeout(() => {
+      performLogout('閒置超過 20 分鐘，已自動登出，請重新登入');
+    }, IDLE_LOGOUT_MS);
+  }
+
+  function stopIdleLogoutTimer() {
+    if (idleLogoutTimer) {
+      clearTimeout(idleLogoutTimer);
+      idleLogoutTimer = null;
+    }
+  }
+
+  function performLogout(message) {
+    currentToken = null;
+    stopHeartbeat();
+    stopIdleLogoutTimer();
+    appBox.style.display = 'none';
+    authBox.style.display = 'block';
+    resultArea.innerHTML = '';
+    statusMsg.textContent = '';
+    if (message) {
+      loginError.style.color = 'var(--brick)';
+      loginError.textContent = message;
+    }
+  }
   let userBlacklist = new Set();
   let lastOptimizationResult = null;
 
@@ -926,6 +974,8 @@
       userNameLabel.textContent = username;
       renderBlacklistUI();
       refreshExtStatus();
+      startHeartbeat();
+      resetIdleLogoutTimer();
     } catch (e) {
       loginError.style.color = 'var(--brick)';
       loginError.textContent = '連線發生錯誤：' + e.message;
@@ -971,11 +1021,7 @@
   });
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
-    currentToken = null;
-    appBox.style.display = 'none';
-    authBox.style.display = 'block';
-    resultArea.innerHTML = '';
-    statusMsg.textContent = '';
+    performLogout();
   });
 
   window.addEventListener('message', (event) => {
@@ -1200,6 +1246,9 @@
       return;
     }
 
+    // 「送出並計算」視為明確的使用動作，重置閒置登出計時器
+    resetIdleLogoutTimer();
+
     let parts = parsedExcelParts.length > 0 ? parsedExcelParts : collectManualParts();
     if (parts.length === 0) {
       resultArea.innerHTML = `<div class="banner short">請至少輸入一筆零件編號，或上傳 Excel / CSV 檔案</div>`;
@@ -1240,11 +1289,7 @@
         && (result.message.includes('401') || result.message.includes('登入已失效'));
 
       if (isAuthExpired) {
-        currentToken = null;
-        appBox.style.display = 'none';
-        authBox.style.display = 'block';
-        loginError.style.color = 'var(--brick)';
-        loginError.textContent = '登入已逾時或失效，請重新登入';
+        performLogout('登入已逾時或失效，請重新登入');
         return;
       }
 
