@@ -260,7 +260,8 @@
   .user-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
+    gap: 12px;
     margin-bottom: 24px;
     font-size: 13px;
     color: var(--ink-soft);
@@ -268,7 +269,105 @@
   .user-bar strong { color: var(--ink); font-family: 'JetBrains Mono', monospace; }
   .version-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.6; margin-left: 8px; }
 
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .icon-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn.has-badge { position: relative; }
+  .drawer-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--brick);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
   #appBox { display: none; }
+
+  /* ---------- 黑名單側邊抽屜 ---------- */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 90;
+  }
+  .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .drawer-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 420px;
+    max-width: 88vw;
+    background: var(--panel);
+    border-left: 1px solid var(--panel-border);
+    box-shadow: -30px 0 60px rgba(0,0,0,0.5);
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 91;
+    display: flex;
+    flex-direction: column;
+  }
+  .drawer-panel.open { transform: translateX(0); }
+
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .drawer-head h2 { margin: 0; }
+  .drawer-close {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .drawer-close:hover { color: var(--brick); }
+
+  .drawer-body {
+    padding: 24px 28px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .drawer-foot {
+    padding: 16px 28px;
+    border-top: 1px solid var(--panel-border);
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .drawer-foot strong { color: var(--ink); }
 
   .blacklist-form { display: flex; gap: 12px; margin-bottom: 16px; }
   .blacklist-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -573,18 +672,37 @@
 
   <div id="appBox">
     <div class="user-bar">
-      <div>OPERATOR: <strong id="userNameLabel"></strong> <span class="version-tag">v1.2.1 | Shotval Foundry</span></div>
+      <button class="icon-btn has-badge" id="blacklistDrawerBtn" title="賣家黑名單管理" aria-label="開啟賣家黑名單管理">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="7" x2="20" y2="7"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="17" x2="20" y2="17"></line>
+        </svg>
+        <span class="drawer-badge" id="blacklistBadge" style="display:none;">0</span>
+      </button>
       <button class="btn-ghost" id="logoutBtn">登出</button>
     </div>
 
-    <div class="panel">
-      <h2>賣家黑名單管理</h2>
-      <div class="blacklist-form">
-        <input type="text" id="newSellerInput" placeholder="例如: ruten_seller123" style="flex: 1;">
-        <button class="btn-ghost" id="addBlacklistBtn">加入黑名單</button>
+    <div class="drawer-overlay" id="blacklistOverlay"></div>
+    <div class="drawer-panel" id="blacklistDrawer">
+      <div class="drawer-head">
+        <h2>賣家黑名單管理</h2>
+        <button class="drawer-close" id="blacklistDrawerCloseBtn" aria-label="關閉">×</button>
       </div>
-      <div style="font-size: 12px; color: var(--ink-soft);" id="blacklistCount">已封鎖數量: 0 個</div>
-      <div class="blacklist-chips" id="blacklistChips"></div>
+      <div class="drawer-body">
+        <div style="font-size: 12px; color: var(--ink-soft); margin-bottom: 16px;">
+          請填入「賣家帳號」（結果卡片上「包裹 · 」後面那串代碼），而非賣場顯示名稱，因為店名可能會被賣家更改。
+        </div>
+        <div class="blacklist-form">
+          <input type="text" id="newSellerInput" placeholder="例如: ruten_seller123" style="flex: 1;">
+          <button class="btn-ghost" id="addBlacklistBtn">加入</button>
+        </div>
+        <div style="font-size: 12px; color: var(--ink-soft);" id="blacklistCount">已封鎖數量: 0 個</div>
+        <div class="blacklist-chips" id="blacklistChips"></div>
+      </div>
+      <div class="drawer-foot">
+        OPERATOR: <strong id="userNameLabel"></strong> <span class="version-tag">v1.2.1 | Shotval Foundry</span>
+      </div>
     </div>
 
     <div class="panel">
@@ -922,7 +1040,14 @@
   function renderBlacklistUI() {
     const chipsBox = document.getElementById('blacklistChips');
     const countLabel = document.getElementById('blacklistCount');
+    const badge = document.getElementById('blacklistBadge');
     countLabel.textContent = `已封鎖數量: ${userBlacklist.size} 個`;
+    if (userBlacklist.size > 0) {
+      badge.textContent = userBlacklist.size;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
     chipsBox.innerHTML = '';
 
     userBlacklist.forEach(seller => {
@@ -1073,6 +1198,26 @@
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
     performLogout();
+  });
+
+  // ---------- 黑名單抽屜開關 ----------
+  const blacklistDrawer = document.getElementById('blacklistDrawer');
+  const blacklistOverlay = document.getElementById('blacklistOverlay');
+
+  function openBlacklistDrawer() {
+    blacklistDrawer.classList.add('open');
+    blacklistOverlay.classList.add('open');
+  }
+  function closeBlacklistDrawer() {
+    blacklistDrawer.classList.remove('open');
+    blacklistOverlay.classList.remove('open');
+  }
+
+  document.getElementById('blacklistDrawerBtn').addEventListener('click', openBlacklistDrawer);
+  document.getElementById('blacklistDrawerCloseBtn').addEventListener('click', closeBlacklistDrawer);
+  blacklistOverlay.addEventListener('click', closeBlacklistDrawer);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeBlacklistDrawer();
   });
 
   window.addEventListener('message', (event) => {
