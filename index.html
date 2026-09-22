@@ -314,7 +314,6 @@
     z-index: 90;
   }
   .drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
   .drawer-panel {
     position: fixed;
     top: 0;
@@ -332,7 +331,6 @@
     flex-direction: column;
   }
   .drawer-panel.open { transform: translateX(0); }
-
   .drawer-head {
     display: flex;
     align-items: center;
@@ -351,7 +349,6 @@
     padding: 4px;
   }
   .drawer-close:hover { color: var(--brick); }
-
   .drawer-body {
     padding: 24px 28px;
     overflow-y: auto;
@@ -361,12 +358,11 @@
   .drawer-foot {
     padding: 16px 28px;
     border-top: 1px solid var(--panel-border);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--ink-soft);
     font-family: 'JetBrains Mono', monospace;
   }
   .drawer-foot strong { color: var(--ink); }
-
   .blacklist-form { display: flex; gap: 12px; margin-bottom: 16px; }
   .blacklist-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .chip {
@@ -439,7 +435,6 @@
     content: ''; flex: 1; border-bottom: 1px solid var(--line);
   }
   .or-divider span { padding: 0 16px; }
-
   .drop-zone {
     border: 2px dashed var(--panel-border);
     border-radius: 8px;
@@ -570,6 +565,143 @@
     background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: pre-wrap; color: var(--ink-soft);
   }
   .empty-state { text-align: center; color: var(--ink-soft); padding: 40px 0; font-size: 12px; }
+
+  /* ===== 公告 Modal ===== */
+  .announce-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 24px;
+  }
+  .announce-overlay.open { display: flex; }
+  .announce-modal {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+  }
+  .announce-head {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .announce-head h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink);
+  }
+  .announce-head .version-tag { color: var(--ink-soft); }
+  .announce-body {
+    padding: 24px 28px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+  .announce-foot {
+    padding: 20px 28px 24px;
+    border-top: 1px solid var(--panel-border);
+  }
+  .announce-check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .announce-check-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--stud);
+    cursor: pointer;
+  }
+  .announce-check-row span {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .announce-foot .btn-primary {
+    width: 100%;
+  }
+  .announce-view-only-foot {
+    padding: 20px 28px 24px;
+    border-top: 1px solid var(--panel-border);
+    text-align: right;
+  }
+
+  .announce-panel-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .announce-panel-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .switch-track {
+    position: absolute;
+    inset: 0;
+    background: var(--line);
+    border: 1px solid var(--panel-border);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: var(--ink-soft);
+    border-radius: 50%;
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .switch input:checked + .switch-track {
+    background: #1B382B;
+    border-color: rgba(82, 196, 114, 0.4);
+  }
+  .switch input:checked + .switch-track .switch-thumb {
+    transform: translateX(20px);
+    background: var(--ok-ink);
+  }
+  .switch input:disabled + .switch-track {
+    cursor: not-allowed;
+    opacity: 0.85;
+  }
 </style>
 </head>
 <body>
@@ -580,6 +712,8 @@
     <h1>採購小幫手</h1>
     <span class="ext-status" id="extStatus">擴充功能：尚未偵測到</span>
   </header>
+
+  <div id="extVersionWarning" style="display:none; background:#3a2a10; border:1px solid #b8860b; color:#ffd580; padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:13px;"></div>
 
   <div class="panel" id="extRequiredNotice" style="display:none;">
     <h2 style="font-size: 22px;">需要先安裝並啟用擴充功能</h2>
@@ -681,6 +815,27 @@
       <button class="btn-ghost" id="logoutBtn">登出</button>
     </div>
 
+    <div class="announce-overlay" id="announceOverlay">
+      <div class="announce-modal">
+        <div class="announce-head">
+          <h2>系統公告 <span class="version-tag" id="announceVersionTag"></span></h2>
+        </div>
+        <div class="announce-body" id="announceBody"></div>
+
+        <div class="announce-foot" id="announceForceFoot" style="display:none;">
+          <label class="announce-check-row">
+            <input type="checkbox" id="announceAckCheckbox">
+            <span>我已閱讀並知悉以上內容</span>
+          </label>
+          <button class="btn-primary" id="announceConfirmBtn" disabled>確認</button>
+        </div>
+
+        <div class="announce-view-only-foot" id="announceViewOnlyFoot" style="display:none;">
+          <button class="btn-ghost" id="announceCloseViewBtn">關閉</button>
+        </div>
+      </div>
+    </div>
+
     <div class="drawer-overlay" id="blacklistOverlay"></div>
     <div class="drawer-panel" id="blacklistDrawer">
       <div class="drawer-head">
@@ -697,9 +852,25 @@
         </div>
         <div style="font-size: 16px; color: var(--ink-soft);" id="blacklistCount">已封鎖數量: 0 個</div>
         <div class="blacklist-chips" id="blacklistChips"></div>
+
+        <div class="announce-panel-section">
+          <div class="announce-panel-row">
+            <span>查看公告內容</span>
+            <button class="btn-ghost" id="viewAnnouncementBtn">查看公告</button>
+          </div>
+          <div class="announce-panel-row">
+            <span>已確認最新公告</span>
+            <label class="switch">
+              <input type="checkbox" id="dismissAnnouncementToggle">
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+        </div>
       </div>
       <div class="drawer-foot">
-        PERATOR: <strong id="userNameLabel"></strong> <span class="version-tag">v2.0.0 | Shotval Foundry</span>
+        operator: <strong id="userNameLabel"></strong> <span class="version-tag">v2.0.1 | Shotval Foundry</span><br>
+        Developer: <strong>Shota</strong><br>
+        Special thanks: <strong>Will</strong> & <strong>電鋸爸</strong>
       </div>
     </div>
 
@@ -752,8 +923,8 @@
   const BACKEND_URL = "https://lego-buying-backend.onrender.com";
   let currentToken = null;
 
-  const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;   // 5 分鐘打一次心跳，保持後端不休眠
-  const IDLE_LOGOUT_MS = 20 * 60 * 1000;          // 20 分鐘沒有「送出並計算」就自動登出
+  const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;  
+  const IDLE_LOGOUT_MS = 20 * 60 * 1000;
   let heartbeatTimer = null;
   let idleLogoutTimer = null;
 
@@ -793,6 +964,7 @@
     authBox.style.display = 'block';
     resultArea.innerHTML = '';
     statusMsg.textContent = '';
+    document.getElementById('announceOverlay')?.classList.remove('open');
     if (message) {
       loginError.style.color = 'var(--brick)';
       loginError.textContent = message;
@@ -895,6 +1067,63 @@
   addRowBtn.addEventListener('click', () => addManualRow());
   addManualRow();
 
+const COLOR_ALIASES = {
+  '深灰': ['深藍灰', '深灰', 'DBG', 'Dark Bluish Gray', 'dark bluish gray', 'dark gray'],
+  '淺灰': ['淺藍灰', '淺灰', 'LBG', 'Light Bluish Gray', 'light bluish gray', 'light gray'],
+  '黑':   ['黑色', '黑', 'Black', 'black'],
+  '白':   ['白色', '白', 'White', 'white'],
+  '紅':   ['紅色', '紅', 'Red', 'red'],
+  '黃':   ['黃色', '黃', 'Yellow', 'yellow'],
+  '藍':   ['藍色', '藍', 'Blue', 'blue'],
+  '綠':   ['綠色', '綠', 'Green', 'green'],
+  '橘':   ['橘色', '橘', 'Orange', 'orange'],
+  '棕':   ['褐色', '棕色', '咖啡色', 'Brown', 'brown'],
+  '透明':   ['透明', '透', 'Trans', 'trans', 'Clear', 'clear'],
+  'White': ['白色', '白', 'White', 'white'],
+  'Black': ['黑色', '黑', 'Black', 'black'],
+  'Light Bluish Gray': ['淺藍灰', '淺灰', 'Light Bluish Gray'],
+  'Dark Bluish Gray': ['深藍灰', '深灰', 'Dark Bluish Gray'],
+  'Red': ['紅色', '紅', 'Red', 'red'],
+  'Dark Red': ['深紅色', '深紅', 'Dark Red'],
+  'Reddish Orange': ['橘紅色', '橘紅', 'Reddish Orange'],
+  'Reddish Brown': ['紅棕色', '紅棕', 'Reddish Brown'],
+  'Dark Brown': ['深棕色', '深棕', 'Dark Brown'],
+  'Tan': ['沙色', '米色', '砂色', 'Tan'],
+  'Dark Tan': ['深砂色', '深米色', '深沙色', 'Dark Tan'],
+  'Nougat': ['深膚色', 'Nougat'],
+  'Light Nougat': ['膚色', 'Light Nougat'],
+  'Orange': ['橘色', '橘', 'Orange', 'orange'],
+  'Dark Orange': ['深橘色', '深橘', 'Dark Orange'],
+  'Bright Light Orange': ['亮橘色', '亮橘', 'Bright Light Orange'],
+  'Yellow': ['黃色', '黃', 'Yellow', 'yellow'],
+  'Bright Light Yellow': ['亮黃色', '亮黃', 'Bright Light Yellow'],
+  'Neon Yellow': ['螢光黃', 'Neon Yellow'],
+  'Green': ['綠色', '綠', 'Green', 'green'],
+  'Dark Green': ['深綠色', '深綠', 'Dark Green'],
+  'Bright Green': ['亮綠色', '亮綠', 'Bright Green'],
+  'Lime': ['萊姆綠', 'Lime'],
+  'Sand Green': ['沙綠色', '砂綠色', 'Sand Green'],
+  'Olive Green': ['橄欖綠色', '橄欖綠', 'Olive Green'],
+  'Blue': ['藍色', '藍', 'Blue', 'blue'],
+  'Dark Blue': ['深藍色', '深藍', 'Dark Blue'],
+  'Medium Blue': ['中間藍', 'Medium Blue'],
+  'Sand Blue': ['沙藍色', '砂藍', 'Sand Blue'],
+  'Dark Azure': ['深水藍色', 'Dark Azure'],
+  'Medium Azure': ['湖水藍', 'Medium Azure'],
+};
+
+function normalizeColor(inputColor) {
+  const trimmed = String(inputColor || '').trim();
+  if (!trimmed || trimmed.toLowerCase() === 'none') return 'None';
+  if (COLOR_ALIASES[trimmed]) return trimmed;
+
+  for (const [key, aliases] of Object.entries(COLOR_ALIASES)) {
+    if (aliases.includes(trimmed)) return key;
+  }
+
+  return trimmed;
+}
+
   function collectManualParts() {
     const parts = [];
     manualRows.querySelectorAll('tr').forEach(tr => {
@@ -902,7 +1131,7 @@
       const color = tr.querySelector('.cell-color').value.trim() || 'None';
       const qty = parseInt(tr.querySelector('.cell-qty').value, 10) || 1;
       if (partNumber) {
-        parts.push({ part_number: partNumber, color, required_qty: qty });
+        parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
       }
     });
     return parts;
@@ -972,6 +1201,23 @@
   function parseRowsToParts(rows) {
     if (!rows || rows.length === 0) return { error: '檔案內沒有資料' };
     const headers = Object.keys(rows[0]).map(h => h.trim());
+    const studioRequired = ['BLItemNo', 'ColorName', 'Qty'];
+    const isStudioFormat = studioRequired.every(col => headers.includes(col));
+
+    if (isStudioFormat) {
+      const parts = [];
+      for (const row of rows) {
+        const partNumber = String(row['BLItemNo'] ?? '').trim();
+        if (!partNumber || partNumber.toLowerCase() === 'nan') continue;
+        let qty = parseInt(row['Qty'], 10);
+        if (isNaN(qty) || qty <= 0) qty = 1;
+        let color = String(row['ColorName'] ?? '').trim();
+        if (!color || color.toLowerCase() === 'nan') color = 'None';
+        parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
+      }
+      return parts.length === 0 ? { error: 'Stud.io 檔案內沒有找到有效的零件資料' } : { parts };
+    }
+
     const required = ['零件編號', '數量', '顏色'];
     const missing = required.filter(col => !headers.includes(col));
     if (missing.length > 0) return { error: `檔案缺少必要欄位：${missing.join('、')}` };
@@ -984,7 +1230,7 @@
       if (isNaN(qty) || qty <= 0) qty = 1;
       let color = String(row['顏色'] ?? '').trim();
       if (!color || color.toLowerCase() === 'nan') color = 'None';
-      parts.push({ part_number: partNumber, color, required_qty: qty });
+      parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
     }
     return parts.length === 0 ? { error: '沒有找到有效的零件資料' } : { parts };
   }
@@ -1147,6 +1393,7 @@
       appBox.style.display = 'block';
       userNameLabel.textContent = username;
       await loadBlacklistFromServer();
+      checkAnnouncementStatus();
       refreshExtStatus();
       startHeartbeat();
       resetIdleLogoutTimer();
@@ -1217,6 +1464,175 @@
     if (e.key === 'Escape') closeBlacklistDrawer();
   });
 
+  // ===== 公告彈窗 =====
+  const announceOverlay = document.getElementById('announceOverlay');
+  const announceBody = document.getElementById('announceBody');
+  const announceVersionTag = document.getElementById('announceVersionTag');
+  const announceForceFoot = document.getElementById('announceForceFoot');
+  const announceViewOnlyFoot = document.getElementById('announceViewOnlyFoot');
+  const announceAckCheckbox = document.getElementById('announceAckCheckbox');
+  const announceConfirmBtn = document.getElementById('announceConfirmBtn');
+  const announceCloseViewBtn = document.getElementById('announceCloseViewBtn');
+  const viewAnnouncementBtn = document.getElementById('viewAnnouncementBtn');
+  const dismissAnnouncementToggle = document.getElementById('dismissAnnouncementToggle');
+
+  let announceIsForceMode = false;
+
+  function openAnnouncementModal(content, version, forceMode) {
+    announceBody.textContent = content || '';
+    announceVersionTag.textContent = version ? `(${version})` : '';
+    announceIsForceMode = !!forceMode;
+
+    if (announceIsForceMode) {
+      announceAckCheckbox.checked = false;
+      announceConfirmBtn.disabled = true;
+      announceForceFoot.style.display = 'block';
+      announceViewOnlyFoot.style.display = 'none';
+    } else {
+      announceForceFoot.style.display = 'none';
+      announceViewOnlyFoot.style.display = 'block';
+    }
+
+    announceOverlay.classList.add('open');
+  }
+
+  function closeAnnouncementModal() {
+    announceOverlay.classList.remove('open');
+  }
+
+  // 嚴格限制：強制模式下點擊背景遮罩不可關閉
+  announceOverlay.addEventListener('click', (e) => {
+    if (e.target === announceOverlay && !announceIsForceMode) {
+      closeAnnouncementModal();
+    }
+  });
+
+  announceAckCheckbox.addEventListener('change', () => {
+    announceConfirmBtn.disabled = !announceAckCheckbox.checked;
+  });
+
+  async function markAnnouncementRead() {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/announcement/mark-read`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        alert(data.detail || '更新公告已讀狀態失敗，請稍後再試');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      alert('連線發生錯誤：' + e.message);
+      return false;
+    }
+  }
+
+  announceConfirmBtn.addEventListener('click', async () => {
+    if (announceConfirmBtn.disabled) return;
+    announceConfirmBtn.disabled = true;
+    const ok = await markAnnouncementRead();
+    if (ok) {
+      dismissAnnouncementToggle.checked = true;
+      dismissAnnouncementToggle.disabled = true;
+      closeAnnouncementModal();
+    } else {
+      announceConfirmBtn.disabled = false;
+    }
+  });
+
+  announceCloseViewBtn.addEventListener('click', closeAnnouncementModal);
+
+  // 側邊欄「查看公告」：純顯示，不觸發已讀狀態變更
+  viewAnnouncementBtn.addEventListener('click', async () => {
+    if (!currentToken) return;
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/announcement/content`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        alert(data.detail || '讀取公告內容失敗');
+        return;
+      }
+      openAnnouncementModal(data.content, data.current_version, false);
+    } catch (e) {
+      alert('連線發生錯誤：' + e.message);
+    }
+  });
+
+  // 抽屜內「已確認最新公告」滑動開關：反映已讀狀態，撥成 ON 即等同勾選+確認
+  dismissAnnouncementToggle.addEventListener('change', async () => {
+    if (!dismissAnnouncementToggle.checked) {
+      // 沒有「取消已讀」的動作，直接撥回 ON（不允許使用者手動關掉已讀狀態）
+      dismissAnnouncementToggle.checked = true;
+      return;
+    }
+
+    dismissAnnouncementToggle.disabled = true;
+    const ok = await markAnnouncementRead();
+    if (ok) {
+      dismissAnnouncementToggle.checked = true;
+      dismissAnnouncementToggle.disabled = true; // 已讀後鎖定，無需再操作
+      closeAnnouncementModal();
+    } else {
+      dismissAnnouncementToggle.checked = false;
+      dismissAnnouncementToggle.disabled = false;
+    }
+  });
+
+  // 登入成功後呼叫，比對版本決定是否強制跳出公告彈窗
+  async function checkAnnouncementStatus() {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/announcement/status`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      const data = await resp.json();
+      if (!resp.ok) return;
+
+      if (data.should_show) {
+        dismissAnnouncementToggle.checked = false;
+        dismissAnnouncementToggle.disabled = false;
+        openAnnouncementModal(data.content, data.current_version, true);
+      } else {
+        dismissAnnouncementToggle.checked = true;
+        dismissAnnouncementToggle.disabled = true;
+      }
+    } catch (e) {
+      // 公告狀態查詢失敗不影響主流程，僅記錄忽略
+    }
+  }
+
+  function compareVersions(a, b) {
+    const pa = String(a || '0').split('.').map(Number);
+    const pb = String(b || '0').split('.').map(Number);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const na = pa[i] || 0;
+      const nb = pb[i] || 0;
+      if (na > nb) return 1;
+      if (na < nb) return -1;
+    }
+    return 0;
+  }
+
+  async function checkExtensionVersion(extVersion) {
+    if (!extVersion) return;
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/extension/min-version`);
+      const data = await resp.json();
+      const minVersion = data.min_version;
+      if (minVersion && compareVersions(extVersion, minVersion) < 0) {
+        const banner = document.getElementById('extVersionWarning');
+        if (banner) {
+          banner.textContent = `⚠️ 你的擴充功能版本（${extVersion}）過舊，請更新到最新版（需求版本 ${minVersion}以上），否則部分功能可能無法正常運作。`;
+          banner.style.display = 'block';
+        }
+      }
+    } catch (e) {
+    }
+  }
+
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     if (event.data?.type === 'LEGO_HELPER_READY') {
@@ -1224,6 +1640,7 @@
       extStatusEl.textContent = '擴充功能：已連接 ✓';
       extStatusEl.classList.add('ok');
       unlockExtensionGate();
+      checkExtensionVersion(event.data.version);
     }
   });
 
@@ -1435,7 +1852,10 @@
 
     resetIdleLogoutTimer();
 
-    let parts = parsedExcelParts.length > 0 ? parsedExcelParts : collectManualParts();
+    let parts = collectManualParts();
+    if (parsedExcelParts.length > 0) {
+      parts = parsedExcelParts;
+    }
     if (parts.length === 0) {
       resultArea.innerHTML = `<div class="banner short">請至少輸入一筆零件編號，或上傳 Excel / CSV 檔案</div>`;
       return;
