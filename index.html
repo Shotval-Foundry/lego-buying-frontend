@@ -559,6 +559,13 @@
   .banner { border-radius: 6px; padding: 14px 18px; font-size: 12px; margin-bottom: 16px; }
   .banner.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #4D381A; }
   .banner.short { background: #2B1416; color: #FF9B9E; border: 1px solid #522023; }
+  .shopee-fallback-link {
+    color: #FFB199;
+    text-decoration: underline;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+  .shopee-fallback-link:hover { color: #FFD1BE; }
 
   details.raw-json { margin-top: 24px; font-size: 11px; color: var(--ink-soft); }
   details.raw-json pre {
@@ -718,7 +725,7 @@
   <div class="panel" id="extRequiredNotice" style="display:none;">
     <h2 style="font-size: 22px;">需要先安裝並啟用擴充功能</h2>
     <p style="color: var(--ink-soft); font-size: 16px; line-height: 1.8;">
-      目前偵測不到「Lego Buying Foundry Helper」擴充功能，本工具需要透過它才能查詢零件報價<br><br>
+      目前偵測不到 "Lego Buying Foundry Helper" 擴充功能，本工具需要透過它才能查詢零件報價<br><br>
       請先安裝並啟用擴充功能，安裝完成後，<strong style="color: var(--ink);">重新整理本頁面</strong>即可繼續使用
     </p>
     <button class="btn-ghost" id="recheckExtBtn" style="margin-top: 12px;">重新檢查</button>
@@ -1051,12 +1058,17 @@
 
   const manualRows = document.getElementById('manualRows');
   const addRowBtn = document.getElementById('addRowBtn');
+  const MANUAL_ROW_EXAMPLES = [
+    { part: '3001', color: '紅' },
+    { part: '3024', color: '深灰' }
+    ];
 
   function addManualRow(partNumber = '', color = '', qty = '') {
+    const example = MANUAL_ROW_EXAMPLES[manualRows.children.length % MANUAL_ROW_EXAMPLES.length];
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" class="cell-part" placeholder="例如 3001" value="${escapeAttr(partNumber)}"></td>
-      <td><input type="text" class="cell-color" placeholder="例如 紅" value="${escapeAttr(color)}"></td>
+      <td><input type="text" class="cell-part" placeholder="例如 ${example.part}" value="${escapeAttr(partNumber)}"></td>
+      <td><input type="text" class="cell-color" placeholder="例如 ${example.color}" value="${escapeAttr(color)}"></td>
       <td class="qty-cell"><input type="number" class="cell-qty" min="1" placeholder="1" value="${qty}"></td>
       <td class="del-cell"><button type="button" class="row-del-btn" title="刪除">×</button></td>
     `;
@@ -1066,63 +1078,7 @@
 
   addRowBtn.addEventListener('click', () => addManualRow());
   addManualRow();
-
-const COLOR_ALIASES = {
-  '深灰': ['深藍灰', '深灰', 'DBG', 'Dark Bluish Gray', 'dark bluish gray', 'dark gray'],
-  '淺灰': ['淺藍灰', '淺灰', 'LBG', 'Light Bluish Gray', 'light bluish gray', 'light gray'],
-  '黑':   ['黑色', '黑', 'Black', 'black'],
-  '白':   ['白色', '白', 'White', 'white'],
-  '紅':   ['紅色', '紅', 'Red', 'red'],
-  '黃':   ['黃色', '黃', 'Yellow', 'yellow'],
-  '藍':   ['藍色', '藍', 'Blue', 'blue'],
-  '綠':   ['綠色', '綠', 'Green', 'green'],
-  '橘':   ['橘色', '橘', 'Orange', 'orange'],
-  '棕':   ['褐色', '棕色', '咖啡色', 'Brown', 'brown'],
-  '透明':   ['透明', '透', 'Trans', 'trans', 'Clear', 'clear'],
-  'White': ['白色', '白', 'White', 'white'],
-  'Black': ['黑色', '黑', 'Black', 'black'],
-  'Light Bluish Gray': ['淺藍灰', '淺灰', 'Light Bluish Gray'],
-  'Dark Bluish Gray': ['深藍灰', '深灰', 'Dark Bluish Gray'],
-  'Red': ['紅色', '紅', 'Red', 'red'],
-  'Dark Red': ['深紅色', '深紅', 'Dark Red'],
-  'Reddish Orange': ['橘紅色', '橘紅', 'Reddish Orange'],
-  'Reddish Brown': ['紅棕色', '紅棕', 'Reddish Brown'],
-  'Dark Brown': ['深棕色', '深棕', 'Dark Brown'],
-  'Tan': ['沙色', '米色', '砂色', 'Tan'],
-  'Dark Tan': ['深砂色', '深米色', '深沙色', 'Dark Tan'],
-  'Nougat': ['深膚色', 'Nougat'],
-  'Light Nougat': ['膚色', 'Light Nougat'],
-  'Orange': ['橘色', '橘', 'Orange', 'orange'],
-  'Dark Orange': ['深橘色', '深橘', 'Dark Orange'],
-  'Bright Light Orange': ['亮橘色', '亮橘', 'Bright Light Orange'],
-  'Yellow': ['黃色', '黃', 'Yellow', 'yellow'],
-  'Bright Light Yellow': ['亮黃色', '亮黃', 'Bright Light Yellow'],
-  'Neon Yellow': ['螢光黃', 'Neon Yellow'],
-  'Green': ['綠色', '綠', 'Green', 'green'],
-  'Dark Green': ['深綠色', '深綠', 'Dark Green'],
-  'Bright Green': ['亮綠色', '亮綠', 'Bright Green'],
-  'Lime': ['萊姆綠', 'Lime'],
-  'Sand Green': ['沙綠色', '砂綠色', 'Sand Green'],
-  'Olive Green': ['橄欖綠色', '橄欖綠', 'Olive Green'],
-  'Blue': ['藍色', '藍', 'Blue', 'blue'],
-  'Dark Blue': ['深藍色', '深藍', 'Dark Blue'],
-  'Medium Blue': ['中間藍', 'Medium Blue'],
-  'Sand Blue': ['沙藍色', '砂藍', 'Sand Blue'],
-  'Dark Azure': ['深水藍色', 'Dark Azure'],
-  'Medium Azure': ['湖水藍', 'Medium Azure'],
-};
-
-function normalizeColor(inputColor) {
-  const trimmed = String(inputColor || '').trim();
-  if (!trimmed || trimmed.toLowerCase() === 'none') return 'None';
-  if (COLOR_ALIASES[trimmed]) return trimmed;
-
-  for (const [key, aliases] of Object.entries(COLOR_ALIASES)) {
-    if (aliases.includes(trimmed)) return key;
-  }
-
-  return trimmed;
-}
+  addManualRow();
 
   function collectManualParts() {
     const parts = [];
@@ -1131,7 +1087,7 @@ function normalizeColor(inputColor) {
       const color = tr.querySelector('.cell-color').value.trim() || 'None';
       const qty = parseInt(tr.querySelector('.cell-qty').value, 10) || 1;
       if (partNumber) {
-        parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
+        parts.push({ part_number: partNumber, color: color, required_qty: qty });
       }
     });
     return parts;
@@ -1213,7 +1169,7 @@ function normalizeColor(inputColor) {
         if (isNaN(qty) || qty <= 0) qty = 1;
         let color = String(row['ColorName'] ?? '').trim();
         if (!color || color.toLowerCase() === 'nan') color = 'None';
-        parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
+        parts.push({ part_number: partNumber, color: color, required_qty: qty });
       }
       return parts.length === 0 ? { error: 'Stud.io 檔案內沒有找到有效的零件資料' } : { parts };
     }
@@ -1230,7 +1186,7 @@ function normalizeColor(inputColor) {
       if (isNaN(qty) || qty <= 0) qty = 1;
       let color = String(row['顏色'] ?? '').trim();
       if (!color || color.toLowerCase() === 'nan') color = 'None';
-      parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
+      parts.push({ part_number: partNumber, color: color, required_qty: qty });
     }
     return parts.length === 0 ? { error: '沒有找到有效的零件資料' } : { parts };
   }
@@ -1435,7 +1391,7 @@ function normalizeColor(inputColor) {
         return;
       }
 
-      regSuccess.textContent = '註冊成功！請切換至「登入」分頁進行登入';
+      regSuccess.textContent = '註冊成功！請切換至 "登入" 分頁進行登入';
     } catch (e) {
       regError.textContent = '註冊連線錯誤：' + e.message;
     }
@@ -1480,7 +1436,7 @@ function normalizeColor(inputColor) {
 
   function openAnnouncementModal(content, version, forceMode) {
     announceBody.textContent = content || '';
-    announceVersionTag.textContent = version ? `(${version})` : '';
+    announceVersionTag.textContent = '';
     announceIsForceMode = !!forceMode;
 
     if (announceIsForceMode) {
@@ -1500,7 +1456,6 @@ function normalizeColor(inputColor) {
     announceOverlay.classList.remove('open');
   }
 
-  // 嚴格限制：強制模式下點擊背景遮罩不可關閉
   announceOverlay.addEventListener('click', (e) => {
     if (e.target === announceOverlay && !announceIsForceMode) {
       closeAnnouncementModal();
@@ -1534,8 +1489,6 @@ function normalizeColor(inputColor) {
     announceConfirmBtn.disabled = true;
     const ok = await markAnnouncementRead();
     if (ok) {
-      dismissAnnouncementToggle.checked = true;
-      dismissAnnouncementToggle.disabled = true;
       closeAnnouncementModal();
     } else {
       announceConfirmBtn.disabled = false;
@@ -1543,8 +1496,6 @@ function normalizeColor(inputColor) {
   });
 
   announceCloseViewBtn.addEventListener('click', closeAnnouncementModal);
-
-  // 側邊欄「查看公告」：純顯示，不觸發已讀狀態變更
   viewAnnouncementBtn.addEventListener('click', async () => {
     if (!currentToken) return;
     try {
@@ -1562,10 +1513,8 @@ function normalizeColor(inputColor) {
     }
   });
 
-  // 抽屜內「已確認最新公告」滑動開關：反映已讀狀態，撥成 ON 即等同勾選+確認
   dismissAnnouncementToggle.addEventListener('change', async () => {
     if (!dismissAnnouncementToggle.checked) {
-      // 沒有「取消已讀」的動作，直接撥回 ON（不允許使用者手動關掉已讀狀態）
       dismissAnnouncementToggle.checked = true;
       return;
     }
@@ -1574,7 +1523,7 @@ function normalizeColor(inputColor) {
     const ok = await markAnnouncementRead();
     if (ok) {
       dismissAnnouncementToggle.checked = true;
-      dismissAnnouncementToggle.disabled = true; // 已讀後鎖定，無需再操作
+      dismissAnnouncementToggle.disabled = true;
       closeAnnouncementModal();
     } else {
       dismissAnnouncementToggle.checked = false;
@@ -1582,7 +1531,6 @@ function normalizeColor(inputColor) {
     }
   });
 
-  // 登入成功後呼叫，比對版本決定是否強制跳出公告彈窗
   async function checkAnnouncementStatus() {
     try {
       const resp = await fetch(`${BACKEND_URL}/api/announcement/status`, {
@@ -1600,7 +1548,6 @@ function normalizeColor(inputColor) {
         dismissAnnouncementToggle.disabled = true;
       }
     } catch (e) {
-      // 公告狀態查詢失敗不影響主流程，僅記錄忽略
     }
   }
 
@@ -1735,6 +1682,24 @@ function normalizeColor(inputColor) {
     XLSX.writeFile(wb, `Shotval_採購報表_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
+  //蝦皮補位搜尋連結
+  function buildShopeeSearchUrl(partNumber, color) {
+    const kwParts = ['lego', partNumber];
+    if (color && color !== 'None') kwParts.push(color);
+    const keyword = kwParts.join(' ');
+    return `https://shopee.tw/search?keyword=${encodeURIComponent(keyword)}`;
+  }
+
+  // shortage_parts / unresolved_parts 的 key 格式為 "partNumber_color"，這裡僅做展示用途的反拆解，以第一個底線為界（零件編號本身不含底線)
+  function splitPartKey(key) {
+    const idx = String(key || '').indexOf('_');
+    if (idx === -1) return { partNumber: key, color: '' };
+    return {
+      partNumber: key.slice(0, idx),
+      color: key.slice(idx + 1)
+    };
+  }
+
   function renderResult(result) {
     resultArea.innerHTML = '';
     lastOptimizationResult = result;
@@ -1775,15 +1740,23 @@ function normalizeColor(inputColor) {
     shortageEntries.forEach(([part, s]) => {
       const b = document.createElement('div');
       b.className = 'banner short';
-      b.textContent = `${part} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個`;
+      const { partNumber, color } = splitPartKey(part);
+      const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
+      b.innerHTML = `${escapeHtml(part)} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個` +
+        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
       frag.appendChild(b);
     });
 
     if (result.unresolved_parts && result.unresolved_parts.length > 0) {
-      const b = document.createElement('div');
-      b.className = 'banner short';
-      b.textContent = `完全找不到貨源，請確認零件編號或顏色是否正確：${result.unresolved_parts.join('、')}`;
-      frag.appendChild(b);
+      result.unresolved_parts.forEach(part => {
+        const b = document.createElement('div');
+        b.className = 'banner short';
+        const { partNumber, color } = splitPartKey(part);
+        const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
+        b.innerHTML = `完全找不到貨源，請確認零件編號或顏色是否正確：${escapeHtml(part)}` +
+          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+        frag.appendChild(b);
+      });
     }
 
     const bySeller = {};
@@ -1836,7 +1809,6 @@ function normalizeColor(inputColor) {
     });
 
     resultArea.appendChild(frag);
-
     document.getElementById('exportExcelBtn').addEventListener('click', () => {
       exportResultToExcel(lastOptimizationResult);
     });
