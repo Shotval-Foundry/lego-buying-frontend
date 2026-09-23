@@ -1058,17 +1058,12 @@
 
   const manualRows = document.getElementById('manualRows');
   const addRowBtn = document.getElementById('addRowBtn');
-  const MANUAL_ROW_EXAMPLES = [
-    { part: '3001', color: '紅' },
-    { part: '3024', color: '深灰' }
-    ];
 
   function addManualRow(partNumber = '', color = '', qty = '') {
-    const example = MANUAL_ROW_EXAMPLES[manualRows.children.length % MANUAL_ROW_EXAMPLES.length];
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" class="cell-part" placeholder="例如 ${example.part}" value="${escapeAttr(partNumber)}"></td>
-      <td><input type="text" class="cell-color" placeholder="例如 ${example.color}" value="${escapeAttr(color)}"></td>
+      <td><input type="text" class="cell-part" placeholder="例如 3001" value="${escapeAttr(partNumber)}"></td>
+      <td><input type="text" class="cell-color" placeholder="例如 紅" value="${escapeAttr(color)}"></td>
       <td class="qty-cell"><input type="number" class="cell-qty" min="1" placeholder="1" value="${qty}"></td>
       <td class="del-cell"><button type="button" class="row-del-btn" title="刪除">×</button></td>
     `;
@@ -1313,6 +1308,15 @@
     }
   });
 
+  ['usernameInput', 'passwordInput'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('loginBtn').click();
+      }
+    });
+  });
+
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const username = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
@@ -1391,7 +1395,7 @@
         return;
       }
 
-      regSuccess.textContent = '註冊成功！請切換至 "登入" 分頁進行登入';
+      regSuccess.textContent = '註冊成功！請切換至「登入」分頁進行登入';
     } catch (e) {
       regError.textContent = '註冊連線錯誤：' + e.message;
     }
@@ -1484,15 +1488,9 @@
     }
   }
 
-  announceConfirmBtn.addEventListener('click', async () => {
+  announceConfirmBtn.addEventListener('click', () => {
     if (announceConfirmBtn.disabled) return;
-    announceConfirmBtn.disabled = true;
-    const ok = await markAnnouncementRead();
-    if (ok) {
-      closeAnnouncementModal();
-    } else {
-      announceConfirmBtn.disabled = false;
-    }
+    closeAnnouncementModal();
   });
 
   announceCloseViewBtn.addEventListener('click', closeAnnouncementModal);
@@ -1572,7 +1570,7 @@
       if (minVersion && compareVersions(extVersion, minVersion) < 0) {
         const banner = document.getElementById('extVersionWarning');
         if (banner) {
-          banner.textContent = `⚠️ 你的擴充功能版本（${extVersion}）過舊，請更新到最新版（需求版本 ${minVersion}以上），否則部分功能可能無法正常運作。`;
+          banner.textContent = `⚠️ 你的擴充功能版本（${extVersion}）過舊，請更新到最新版（需求版本 ${minVersion}以上），否則部分功能可能無法正常運作`;
           banner.style.display = 'block';
         }
       }
@@ -1682,7 +1680,7 @@
     XLSX.writeFile(wb, `Shotval_採購報表_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  //蝦皮補位搜尋連結
+  // ===== 蝦皮補位搜尋連結（僅用於缺貨/無資料項，不做任何自動爬蟲或查詢）=====
   function buildShopeeSearchUrl(partNumber, color) {
     const kwParts = ['lego', partNumber];
     if (color && color !== 'None') kwParts.push(color);
@@ -1690,7 +1688,6 @@
     return `https://shopee.tw/search?keyword=${encodeURIComponent(keyword)}`;
   }
 
-  // shortage_parts / unresolved_parts 的 key 格式為 "partNumber_color"，這裡僅做展示用途的反拆解，以第一個底線為界（零件編號本身不含底線)
   function splitPartKey(key) {
     const idx = String(key || '').indexOf('_');
     if (idx === -1) return { partNumber: key, color: '' };
