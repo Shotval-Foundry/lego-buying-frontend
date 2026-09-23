@@ -1124,12 +1124,31 @@
     if (e.target.files.length > 0) handleExcelFile(e.target.files[0]);
   });
 
-  function handleExcelFile(file) {
+function decodeTextAutoEncoding(buffer) {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch (e) {
+    // 嚴格 UTF-8 解碼失敗，改用 Big5（Windows 中文版 Excel 另存 CSV 的常見預設編碼）
+    return new TextDecoder('big5').decode(buffer);
+  }
+}
+
+function handleExcelFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const isCsv = /\.csv$/i.test(file.name);
+        let workbook;
+
+        if (isCsv) {
+          const buffer = e.target.result;
+          const text = decodeTextAutoEncoding(buffer);
+          workbook = XLSX.read(text, { type: 'string' });
+        } else {
+          const data = new Uint8Array(e.target.result);
+          workbook = XLSX.read(data, { type: 'array' });
+        }
+
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
         const result = parseRowsToParts(rows);
@@ -1741,7 +1760,7 @@
       const { partNumber, color } = splitPartKey(part);
       const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
       b.innerHTML = `${escapeHtml(part)} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個` +
-        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮搜尋補位</a>`;
       frag.appendChild(b);
     });
 
@@ -1752,7 +1771,7 @@
         const { partNumber, color } = splitPartKey(part);
         const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
         b.innerHTML = `完全找不到貨源，請確認零件編號或顏色是否正確：${escapeHtml(part)}` +
-          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮搜尋補位</a>`;
         frag.appendChild(b);
       });
     }
@@ -1772,7 +1791,6 @@
       crate.className = 'crate';
 
       const sellerName = items[0].seller_name || sellerId;
-
       crate.innerHTML = `
         <div class="crate-head">
           <div>
@@ -1821,7 +1839,6 @@
     }
 
     resetIdleLogoutTimer();
-
     let parts = collectManualParts();
     if (parsedExcelParts.length > 0) {
       parts = parsedExcelParts;
