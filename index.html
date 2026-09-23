@@ -714,10 +714,10 @@
 </head>
 <body>
 <div class="wrap">
-
+  
   <header class="page-head">
     <div class="brand-tag">Shotval Foundry</div>
-    <h1>採購小幫手</h1>
+    <h1 id="pageGreeting">採購小幫手</h1>
     <span class="ext-status" id="extStatus">擴充功能：尚未偵測到</span>
   </header>
 
@@ -973,6 +973,8 @@
     resultArea.innerHTML = '';
     statusMsg.textContent = '';
     document.getElementById('announceOverlay')?.classList.remove('open');
+    const greetingEl = document.getElementById('pageGreeting');
+    if (greetingEl) greetingEl.textContent = '採購小幫手';
     if (message) {
       loginError.style.color = 'var(--brick)';
       loginError.textContent = message;
@@ -1128,7 +1130,6 @@ function decodeTextAutoEncoding(buffer) {
   try {
     return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
   } catch (e) {
-    // 嚴格 UTF-8 解碼失敗，改用 Big5（Windows 中文版 Excel 另存 CSV 的常見預設編碼）
     return new TextDecoder('big5').decode(buffer);
   }
 }
@@ -1372,6 +1373,7 @@ function handleExcelFile(file) {
       authBox.style.display = 'none';
       appBox.style.display = 'block';
       userNameLabel.textContent = username;
+      applyPersonalizedGreeting(username);
       await loadBlacklistFromServer();
       checkAnnouncementStatus();
       refreshExtStatus();
@@ -1567,6 +1569,49 @@ function handleExcelFile(file) {
       }
     } catch (e) {
     }
+  }
+
+  const GREETINGS = {
+    morning: [
+      '早，{username}，新的一天，繼續創作吧',
+      '{username}，早安，我已經準備就緒',
+      '晨光正好，{username}，開始今天的採購吧',
+      '{username}，今天準備打造什麼？',
+      '早安，{username}，我已經就位了，你呢?'
+    ],
+    afternoon: [
+      '{username}，午後時光，來找幾個零件吧',
+      '午安，{username}，工坊正忙碌著呢',
+      '{username}，下午了，繼續你的創作大業吧',
+      '{username}，午後正適合整理採購清單',
+      '今天要補齊哪些缺件？{username}'
+    ],
+    evening: [
+      '晚安，{username}，夜深了還在忙採購嗎',
+      '{username}，夜幕降臨，創作之火依然溫暖',
+      '晚上好，{username}，今晚也來 MOC 如何?',
+      '{username}，夜色正濃，繼續你的創作之旅',
+      '夜間模式啟動，{username}，靜音整理今晚的清單吧'
+    ]
+  };
+
+  function getGreetingTimeSlot() {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    return 'evening';
+  }
+
+  function pickGreeting(username) {
+    const slot = getGreetingTimeSlot();
+    const list = GREETINGS[slot];
+    const template = list[Math.floor(Math.random() * list.length)];
+    return template.replace('{username}', username);
+  }
+
+  function applyPersonalizedGreeting(username) {
+    const el = document.getElementById('pageGreeting');
+    if (el) el.textContent = pickGreeting(username);
   }
 
   function compareVersions(a, b) {
@@ -1839,6 +1884,7 @@ function handleExcelFile(file) {
     }
 
     resetIdleLogoutTimer();
+
     let parts = collectManualParts();
     if (parsedExcelParts.length > 0) {
       parts = parsedExcelParts;
