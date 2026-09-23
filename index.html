@@ -1513,7 +1513,7 @@
   });
 
   dismissAnnouncementToggle.addEventListener('change', async () => {
-    if (!dismissAnnouncementToggle.checked) {）
+    if (!dismissAnnouncementToggle.checked) {
       dismissAnnouncementToggle.checked = true;
       return;
     }
@@ -1741,7 +1741,7 @@
       const { partNumber, color } = splitPartKey(part);
       const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
       b.innerHTML = `${escapeHtml(part)} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個` +
-        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮搜尋補位</a>`;
+        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
       frag.appendChild(b);
     });
 
@@ -1752,7 +1752,7 @@
         const { partNumber, color } = splitPartKey(part);
         const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
         b.innerHTML = `完全找不到貨源，請確認零件編號或顏色是否正確：${escapeHtml(part)}` +
-          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮搜尋補位</a>`;
+          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
         frag.appendChild(b);
       });
     }

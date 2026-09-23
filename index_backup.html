@@ -559,6 +559,13 @@
   .banner { border-radius: 6px; padding: 14px 18px; font-size: 12px; margin-bottom: 16px; }
   .banner.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #4D381A; }
   .banner.short { background: #2B1416; color: #FF9B9E; border: 1px solid #522023; }
+  .shopee-fallback-link {
+    color: #FFB199;
+    text-decoration: underline;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+  .shopee-fallback-link:hover { color: #FFD1BE; }
 
   details.raw-json { margin-top: 24px; font-size: 11px; color: var(--ink-soft); }
   details.raw-json pre {
@@ -575,27 +582,27 @@
     align-items: center;
     justify-content: center;
     z-index: 200;
-    padding: 24px;
+    padding: clamp(16px, 3vw, 24px);
   }
   .announce-overlay.open { display: flex; }
   .announce-modal {
     background: var(--panel);
     border: 1px solid var(--panel-border);
     border-radius: 12px;
-    max-width: 560px;
+    max-width: min(92vw, 680px);
     width: 100%;
-    max-height: 82vh;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 30px 60px rgba(0,0,0,0.6);
   }
   .announce-head {
-    padding: 24px 28px 16px;
+    padding: clamp(16px, 2.4vw, 24px) clamp(18px, 2.8vw, 28px) clamp(12px, 1.6vw, 16px);
     border-bottom: 1px solid var(--panel-border);
   }
   .announce-head h2 {
     font-family: 'Cinzel', serif;
-    font-size: 18px;
+    font-size: clamp(16px, 1.3vw + 11px, 20px);
     font-weight: 600;
     margin: 0;
     text-transform: uppercase;
@@ -604,16 +611,16 @@
   }
   .announce-head .version-tag { color: var(--ink-soft); }
   .announce-body {
-    padding: 24px 28px;
+    padding: clamp(18px, 2.4vw, 24px) clamp(18px, 2.8vw, 28px);
     overflow-y: auto;
     flex: 1;
-    font-size: 14px;
-    line-height: 1.8;
+    font-size: clamp(14px, 0.65vw + 12px, 16px);
+    line-height: 1.85;
     color: var(--ink);
     white-space: pre-wrap;
   }
   .announce-foot {
-    padding: 20px 28px 24px;
+    padding: clamp(16px, 2vw, 20px) clamp(18px, 2.8vw, 28px) clamp(18px, 2.4vw, 24px);
     border-top: 1px solid var(--panel-border);
   }
   .announce-check-row {
@@ -625,20 +632,21 @@
     user-select: none;
   }
   .announce-check-row input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: clamp(18px, 1.2vw + 12px, 20px);
+    height: clamp(18px, 1.2vw + 12px, 20px);
     accent-color: var(--stud);
     cursor: pointer;
   }
   .announce-check-row span {
-    font-size: 14px;
+    font-size: clamp(14px, 0.5vw + 12px, 15px);
     color: var(--ink);
   }
   .announce-foot .btn-primary {
     width: 100%;
+    font-size: clamp(14px, 0.5vw + 12px, 16px);
   }
   .announce-view-only-foot {
-    padding: 20px 28px 24px;
+    padding: clamp(16px, 2vw, 20px) clamp(18px, 2.8vw, 28px) clamp(18px, 2.4vw, 24px);
     border-top: 1px solid var(--panel-border);
     text-align: right;
   }
@@ -1066,63 +1074,7 @@
 
   addRowBtn.addEventListener('click', () => addManualRow());
   addManualRow();
-
-const COLOR_ALIASES = {
-  '深灰': ['深藍灰', '深灰', 'DBG', 'Dark Bluish Gray', 'dark bluish gray', 'dark gray'],
-  '淺灰': ['淺藍灰', '淺灰', 'LBG', 'Light Bluish Gray', 'light bluish gray', 'light gray'],
-  '黑':   ['黑色', '黑', 'Black', 'black'],
-  '白':   ['白色', '白', 'White', 'white'],
-  '紅':   ['紅色', '紅', 'Red', 'red'],
-  '黃':   ['黃色', '黃', 'Yellow', 'yellow'],
-  '藍':   ['藍色', '藍', 'Blue', 'blue'],
-  '綠':   ['綠色', '綠', 'Green', 'green'],
-  '橘':   ['橘色', '橘', 'Orange', 'orange'],
-  '棕':   ['褐色', '棕色', '咖啡色', 'Brown', 'brown'],
-  '透明':   ['透明', '透', 'Trans', 'trans', 'Clear', 'clear'],
-  'White': ['白色', '白', 'White', 'white'],
-  'Black': ['黑色', '黑', 'Black', 'black'],
-  'Light Bluish Gray': ['淺藍灰', '淺灰', 'Light Bluish Gray'],
-  'Dark Bluish Gray': ['深藍灰', '深灰', 'Dark Bluish Gray'],
-  'Red': ['紅色', '紅', 'Red', 'red'],
-  'Dark Red': ['深紅色', '深紅', 'Dark Red'],
-  'Reddish Orange': ['橘紅色', '橘紅', 'Reddish Orange'],
-  'Reddish Brown': ['紅棕色', '紅棕', 'Reddish Brown'],
-  'Dark Brown': ['深棕色', '深棕', 'Dark Brown'],
-  'Tan': ['沙色', '米色', '砂色', 'Tan'],
-  'Dark Tan': ['深砂色', '深米色', '深沙色', 'Dark Tan'],
-  'Nougat': ['深膚色', 'Nougat'],
-  'Light Nougat': ['膚色', 'Light Nougat'],
-  'Orange': ['橘色', '橘', 'Orange', 'orange'],
-  'Dark Orange': ['深橘色', '深橘', 'Dark Orange'],
-  'Bright Light Orange': ['亮橘色', '亮橘', 'Bright Light Orange'],
-  'Yellow': ['黃色', '黃', 'Yellow', 'yellow'],
-  'Bright Light Yellow': ['亮黃色', '亮黃', 'Bright Light Yellow'],
-  'Neon Yellow': ['螢光黃', 'Neon Yellow'],
-  'Green': ['綠色', '綠', 'Green', 'green'],
-  'Dark Green': ['深綠色', '深綠', 'Dark Green'],
-  'Bright Green': ['亮綠色', '亮綠', 'Bright Green'],
-  'Lime': ['萊姆綠', 'Lime'],
-  'Sand Green': ['沙綠色', '砂綠色', 'Sand Green'],
-  'Olive Green': ['橄欖綠色', '橄欖綠', 'Olive Green'],
-  'Blue': ['藍色', '藍', 'Blue', 'blue'],
-  'Dark Blue': ['深藍色', '深藍', 'Dark Blue'],
-  'Medium Blue': ['中間藍', 'Medium Blue'],
-  'Sand Blue': ['沙藍色', '砂藍', 'Sand Blue'],
-  'Dark Azure': ['深水藍色', 'Dark Azure'],
-  'Medium Azure': ['湖水藍', 'Medium Azure'],
-};
-
-function normalizeColor(inputColor) {
-  const trimmed = String(inputColor || '').trim();
-  if (!trimmed || trimmed.toLowerCase() === 'none') return 'None';
-  if (COLOR_ALIASES[trimmed]) return trimmed;
-
-  for (const [key, aliases] of Object.entries(COLOR_ALIASES)) {
-    if (aliases.includes(trimmed)) return key;
-  }
-
-  return trimmed;
-}
+  addManualRow();
 
   function collectManualParts() {
     const parts = [];
@@ -1131,7 +1083,7 @@ function normalizeColor(inputColor) {
       const color = tr.querySelector('.cell-color').value.trim() || 'None';
       const qty = parseInt(tr.querySelector('.cell-qty').value, 10) || 1;
       if (partNumber) {
-        parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
+        parts.push({ part_number: partNumber, color: color, required_qty: qty });
       }
     });
     return parts;
@@ -1213,7 +1165,7 @@ function normalizeColor(inputColor) {
         if (isNaN(qty) || qty <= 0) qty = 1;
         let color = String(row['ColorName'] ?? '').trim();
         if (!color || color.toLowerCase() === 'nan') color = 'None';
-        parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
+        parts.push({ part_number: partNumber, color: color, required_qty: qty });
       }
       return parts.length === 0 ? { error: 'Stud.io 檔案內沒有找到有效的零件資料' } : { parts };
     }
@@ -1230,7 +1182,7 @@ function normalizeColor(inputColor) {
       if (isNaN(qty) || qty <= 0) qty = 1;
       let color = String(row['顏色'] ?? '').trim();
       if (!color || color.toLowerCase() === 'nan') color = 'None';
-      parts.push({ part_number: partNumber, color: normalizeColor(color), required_qty: qty });
+      parts.push({ part_number: partNumber, color: color, required_qty: qty });
     }
     return parts.length === 0 ? { error: '沒有找到有效的零件資料' } : { parts };
   }
@@ -1357,6 +1309,15 @@ function normalizeColor(inputColor) {
     }
   });
 
+  ['usernameInput', 'passwordInput'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('loginBtn').click();
+      }
+    });
+  });
+
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const username = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
@@ -1480,7 +1441,7 @@ function normalizeColor(inputColor) {
 
   function openAnnouncementModal(content, version, forceMode) {
     announceBody.textContent = content || '';
-    announceVersionTag.textContent = version ? `(${version})` : '';
+    announceVersionTag.textContent = '';
     announceIsForceMode = !!forceMode;
 
     if (announceIsForceMode) {
@@ -1500,7 +1461,6 @@ function normalizeColor(inputColor) {
     announceOverlay.classList.remove('open');
   }
 
-  // 嚴格限制：強制模式下點擊背景遮罩不可關閉
   announceOverlay.addEventListener('click', (e) => {
     if (e.target === announceOverlay && !announceIsForceMode) {
       closeAnnouncementModal();
@@ -1529,22 +1489,12 @@ function normalizeColor(inputColor) {
     }
   }
 
-  announceConfirmBtn.addEventListener('click', async () => {
+  announceConfirmBtn.addEventListener('click', () => {
     if (announceConfirmBtn.disabled) return;
-    announceConfirmBtn.disabled = true;
-    const ok = await markAnnouncementRead();
-    if (ok) {
-      dismissAnnouncementToggle.checked = true;
-      dismissAnnouncementToggle.disabled = true;
-      closeAnnouncementModal();
-    } else {
-      announceConfirmBtn.disabled = false;
-    }
+    closeAnnouncementModal();
   });
 
   announceCloseViewBtn.addEventListener('click', closeAnnouncementModal);
-
-  // 側邊欄「查看公告」：純顯示，不觸發已讀狀態變更
   viewAnnouncementBtn.addEventListener('click', async () => {
     if (!currentToken) return;
     try {
@@ -1562,10 +1512,8 @@ function normalizeColor(inputColor) {
     }
   });
 
-  // 抽屜內「已確認最新公告」滑動開關：反映已讀狀態，撥成 ON 即等同勾選+確認
   dismissAnnouncementToggle.addEventListener('change', async () => {
     if (!dismissAnnouncementToggle.checked) {
-      // 沒有「取消已讀」的動作，直接撥回 ON（不允許使用者手動關掉已讀狀態）
       dismissAnnouncementToggle.checked = true;
       return;
     }
@@ -1574,7 +1522,7 @@ function normalizeColor(inputColor) {
     const ok = await markAnnouncementRead();
     if (ok) {
       dismissAnnouncementToggle.checked = true;
-      dismissAnnouncementToggle.disabled = true; // 已讀後鎖定，無需再操作
+      dismissAnnouncementToggle.disabled = true;
       closeAnnouncementModal();
     } else {
       dismissAnnouncementToggle.checked = false;
@@ -1582,7 +1530,6 @@ function normalizeColor(inputColor) {
     }
   });
 
-  // 登入成功後呼叫，比對版本決定是否強制跳出公告彈窗
   async function checkAnnouncementStatus() {
     try {
       const resp = await fetch(`${BACKEND_URL}/api/announcement/status`, {
@@ -1600,7 +1547,6 @@ function normalizeColor(inputColor) {
         dismissAnnouncementToggle.disabled = true;
       }
     } catch (e) {
-      // 公告狀態查詢失敗不影響主流程，僅記錄忽略
     }
   }
 
@@ -1735,6 +1681,23 @@ function normalizeColor(inputColor) {
     XLSX.writeFile(wb, `Shotval_採購報表_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
+  // ===== 蝦皮補位搜尋連結（僅用於缺貨/無資料項，不做任何自動爬蟲或查詢）=====
+  function buildShopeeSearchUrl(partNumber, color) {
+    const kwParts = ['lego', partNumber];
+    if (color && color !== 'None') kwParts.push(color);
+    const keyword = kwParts.join(' ');
+    return `https://shopee.tw/search?keyword=${encodeURIComponent(keyword)}`;
+  }
+
+  function splitPartKey(key) {
+    const idx = String(key || '').indexOf('_');
+    if (idx === -1) return { partNumber: key, color: '' };
+    return {
+      partNumber: key.slice(0, idx),
+      color: key.slice(idx + 1)
+    };
+  }
+
   function renderResult(result) {
     resultArea.innerHTML = '';
     lastOptimizationResult = result;
@@ -1775,15 +1738,23 @@ function normalizeColor(inputColor) {
     shortageEntries.forEach(([part, s]) => {
       const b = document.createElement('div');
       b.className = 'banner short';
-      b.textContent = `${part} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個`;
+      const { partNumber, color } = splitPartKey(part);
+      const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
+      b.innerHTML = `${escapeHtml(part)} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個` +
+        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
       frag.appendChild(b);
     });
 
     if (result.unresolved_parts && result.unresolved_parts.length > 0) {
-      const b = document.createElement('div');
-      b.className = 'banner short';
-      b.textContent = `完全找不到貨源，請確認零件編號或顏色是否正確：${result.unresolved_parts.join('、')}`;
-      frag.appendChild(b);
+      result.unresolved_parts.forEach(part => {
+        const b = document.createElement('div');
+        b.className = 'banner short';
+        const { partNumber, color } = splitPartKey(part);
+        const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
+        b.innerHTML = `完全找不到貨源，請確認零件編號或顏色是否正確：${escapeHtml(part)}` +
+          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+        frag.appendChild(b);
+      });
     }
 
     const bySeller = {};
@@ -1836,7 +1807,6 @@ function normalizeColor(inputColor) {
     });
 
     resultArea.appendChild(frag);
-
     document.getElementById('exportExcelBtn').addEventListener('click', () => {
       exportResultToExcel(lastOptimizationResult);
     });
