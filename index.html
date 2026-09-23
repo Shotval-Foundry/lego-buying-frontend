@@ -582,27 +582,27 @@
     align-items: center;
     justify-content: center;
     z-index: 200;
-    padding: 24px;
+    padding: clamp(16px, 3vw, 24px);
   }
   .announce-overlay.open { display: flex; }
   .announce-modal {
     background: var(--panel);
     border: 1px solid var(--panel-border);
     border-radius: 12px;
-    max-width: 560px;
+    max-width: min(92vw, 680px);
     width: 100%;
-    max-height: 82vh;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 30px 60px rgba(0,0,0,0.6);
   }
   .announce-head {
-    padding: 24px 28px 16px;
+    padding: clamp(16px, 2.4vw, 24px) clamp(18px, 2.8vw, 28px) clamp(12px, 1.6vw, 16px);
     border-bottom: 1px solid var(--panel-border);
   }
   .announce-head h2 {
     font-family: 'Cinzel', serif;
-    font-size: 18px;
+    font-size: clamp(16px, 1.3vw + 11px, 20px);
     font-weight: 600;
     margin: 0;
     text-transform: uppercase;
@@ -611,16 +611,16 @@
   }
   .announce-head .version-tag { color: var(--ink-soft); }
   .announce-body {
-    padding: 24px 28px;
+    padding: clamp(18px, 2.4vw, 24px) clamp(18px, 2.8vw, 28px);
     overflow-y: auto;
     flex: 1;
-    font-size: 14px;
-    line-height: 1.8;
+    font-size: clamp(14px, 0.65vw + 12px, 16px);
+    line-height: 1.85;
     color: var(--ink);
     white-space: pre-wrap;
   }
   .announce-foot {
-    padding: 20px 28px 24px;
+    padding: clamp(16px, 2vw, 20px) clamp(18px, 2.8vw, 28px) clamp(18px, 2.4vw, 24px);
     border-top: 1px solid var(--panel-border);
   }
   .announce-check-row {
@@ -632,20 +632,21 @@
     user-select: none;
   }
   .announce-check-row input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: clamp(18px, 1.2vw + 12px, 20px);
+    height: clamp(18px, 1.2vw + 12px, 20px);
     accent-color: var(--stud);
     cursor: pointer;
   }
   .announce-check-row span {
-    font-size: 14px;
+    font-size: clamp(14px, 0.5vw + 12px, 15px);
     color: var(--ink);
   }
   .announce-foot .btn-primary {
     width: 100%;
+    font-size: clamp(14px, 0.5vw + 12px, 16px);
   }
   .announce-view-only-foot {
-    padding: 20px 28px 24px;
+    padding: clamp(16px, 2vw, 20px) clamp(18px, 2.8vw, 28px) clamp(18px, 2.4vw, 24px);
     border-top: 1px solid var(--panel-border);
     text-align: right;
   }
@@ -725,7 +726,7 @@
   <div class="panel" id="extRequiredNotice" style="display:none;">
     <h2 style="font-size: 22px;">需要先安裝並啟用擴充功能</h2>
     <p style="color: var(--ink-soft); font-size: 16px; line-height: 1.8;">
-      目前偵測不到 "Lego Buying Foundry Helper" 擴充功能，本工具需要透過它才能查詢零件報價<br><br>
+      目前偵測不到「Lego Buying Foundry Helper」擴充功能，本工具需要透過它才能查詢零件報價<br><br>
       請先安裝並啟用擴充功能，安裝完成後，<strong style="color: var(--ink);">重新整理本頁面</strong>即可繼續使用
     </p>
     <button class="btn-ghost" id="recheckExtBtn" style="margin-top: 12px;">重新檢查</button>
@@ -1512,7 +1513,7 @@
   });
 
   dismissAnnouncementToggle.addEventListener('change', async () => {
-    if (!dismissAnnouncementToggle.checked) {
+    if (!dismissAnnouncementToggle.checked) {）
       dismissAnnouncementToggle.checked = true;
       return;
     }
@@ -1570,7 +1571,7 @@
       if (minVersion && compareVersions(extVersion, minVersion) < 0) {
         const banner = document.getElementById('extVersionWarning');
         if (banner) {
-          banner.textContent = `⚠️ 你的擴充功能版本（${extVersion}）過舊，請更新到最新版（需求版本 ${minVersion}以上），否則部分功能可能無法正常運作`;
+          banner.textContent = `⚠️ 你的擴充功能版本（${extVersion}）過舊，請更新到最新版（需求版本 ${minVersion}以上），否則部分功能可能無法正常運作。`;
           banner.style.display = 'block';
         }
       }
@@ -1740,7 +1741,7 @@
       const { partNumber, color } = splitPartKey(part);
       const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
       b.innerHTML = `${escapeHtml(part)} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個` +
-        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮搜尋補位</a>`;
       frag.appendChild(b);
     });
 
@@ -1751,7 +1752,7 @@
         const { partNumber, color } = splitPartKey(part);
         const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
         b.innerHTML = `完全找不到貨源，請確認零件編號或顏色是否正確：${escapeHtml(part)}` +
-          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+          ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮搜尋補位</a>`;
         frag.appendChild(b);
       });
     }
