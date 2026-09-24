@@ -710,6 +710,16 @@
     cursor: not-allowed;
     opacity: 0.85;
   }
+  .credit-link {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--ink-soft);
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .credit-link:hover {
+    color: var(--stud);
+    border-color: var(--stud);
+  }
 </style>
 </head>
 <body>
@@ -877,8 +887,8 @@
       </div>
       <div class="drawer-foot">
         operator: <strong id="userNameLabel"></strong> <span class="version-tag">v2.0.1 | Shotval Foundry</span><br>
-        Developer: <strong>Shota</strong><br>
-        Special thanks: <strong>Will</strong> & <strong>電鋸爸</strong>
+        Developer: <a href="https://www.instagram.com/shotval_foundry/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>Shota</strong></a><br>
+        Special thanks: <a href="https://www.instagram.com/legoplayerwill/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>Will</strong></a> &amp; <a href="https://www.instagram.com/chainsaw__yu/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>電鋸爸</strong></a>
       </div>
     </div>
 
