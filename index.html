@@ -896,7 +896,7 @@
         </div>
       </div>
       <div class="drawer-foot">
-        operator: <strong id="userNameLabel"></strong> <span class="version-tag">v2.0.1 | Shotval Foundry</span><br>
+        operator: <strong id="userNameLabel"></strong> <span class="version-tag">系統版本: v2.0.1 | Shotval Foundry</span><br>
         Developer: <a href="https://www.instagram.com/shotval_foundry/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>Shota</strong></a><br>
         Special thanks: <a href="https://www.instagram.com/legoplayerwill/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>Will</strong></a> &amp; <a href="https://www.instagram.com/chainsaw__yu/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>電鋸爸</strong></a>
       </div>
@@ -1138,6 +1138,7 @@
   const fileInput = document.getElementById('fileInput');
   const excelPreviewArea = document.getElementById('excelPreviewArea');
   let parsedExcelParts = [];
+  let uploadedFileBaseName = '';
 
   dropZone.addEventListener('click', () => fileInput.click());
   dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -1182,14 +1183,17 @@ function handleExcelFile(file) {
         if (result.error) {
           excelPreviewArea.innerHTML = `<div class="banner short">${escapeHtml(result.error)}</div>`;
           parsedExcelParts = [];
+          uploadedFileBaseName = '';
           return;
         }
 
         parsedExcelParts = result.parts;
+        uploadedFileBaseName = file.name.replace(/\.[^.]+$/, '');
         renderExcelPreview(file.name, parsedExcelParts);
       } catch (err) {
         excelPreviewArea.innerHTML = `<div class="banner short">檔案讀取失敗：${escapeHtml(err.message)}</div>`;
         parsedExcelParts = [];
+        uploadedFileBaseName = '';
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1256,6 +1260,7 @@ function handleExcelFile(file) {
 
     document.getElementById('clearFileBtn').addEventListener('click', () => {
       parsedExcelParts = [];
+      uploadedFileBaseName = '';
       fileInput.value = '';
       excelPreviewArea.innerHTML = '';
     });
@@ -1767,7 +1772,10 @@ function handleExcelFile(file) {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "採購建議表");
-    XLSX.writeFile(wb, `Shotval_採購報表_${new Date().toISOString().slice(0,10)}.xlsx`);
+    
+    const reportDate = new Date().toISOString().slice(0, 10);
+    const namePrefix = uploadedFileBaseName ? uploadedFileBaseName : 'Shotval';
+    XLSX.writeFile(wb, `${namePrefix}_採購報表_${reportDate}.xlsx`);
   }
 
   // ===== 蝦皮補位搜尋連結（僅用於缺貨/無資料項，不做任何自動爬蟲或查詢）=====
