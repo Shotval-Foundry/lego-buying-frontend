@@ -1,0 +1,1021 @@
+const BACKEND_URL = "https://lego-buying-backend.onrender.com";
+let currentToken = null;
+
+const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;  
+const IDLE_LOGOUT_MS = 20 * 60 * 1000;
+let heartbeatTimer = null;
+let idleLogoutTimer = null;
+
+function startHeartbeat() {
+  stopHeartbeat();
+  heartbeatTimer = setInterval(() => {
+    fetch(`${BACKEND_URL}/`).catch(() => { /* 心跳失敗不影響使用，忽略即可 */ });
+  }, HEARTBEAT_INTERVAL_MS);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+}
+
+function resetIdleLogoutTimer() {
+  if (idleLogoutTimer) clearTimeout(idleLogoutTimer);
+  idleLogoutTimer = setTimeout(() => {
+    performLogout('閒置超過 20 分鐘，已自動登出，請重新登入');
+  }, IDLE_LOGOUT_MS);
+}
+
+function stopIdleLogoutTimer() {
+  if (idleLogoutTimer) {
+    clearTimeout(idleLogoutTimer);
+    idleLogoutTimer = null;
+  }
+}
+
+function performLogout(message) {
+  currentToken = null;
+  stopHeartbeat();
+  stopIdleLogoutTimer();
+  appBox.style.display = 'none';
+  authBox.style.display = 'block';
+  resultArea.innerHTML = '';
+  statusMsg.textContent = '';
+  document.getElementById('announceOverlay')?.classList.remove('open');
+  const greetingEl = document.getElementById('pageGreeting');
+  if (greetingEl) greetingEl.textContent = '採購小幫手';
+  if (message) {
+    loginError.style.color = 'var(--brick)';
+    loginError.textContent = message;
+  }
+}
+
+let userBlacklist = new Set();
+let lastOptimizationResult = null;
+
+const extStatusEl = document.getElementById('extStatus');
+const authBox = document.getElementById('authBox');
+const extRequiredNotice = document.getElementById('extRequiredNotice');
+const appBox = document.getElementById('appBox');
+const loginError = document.getElementById('loginError');
+const regError = document.getElementById('regError');
+const regSuccess = document.getElementById('regSuccess');
+const userNameLabel = document.getElementById('userNameLabel');
+const statusMsg = document.getElementById('statusMsg');
+const resultArea = document.getElementById('resultArea');
+const submitBtn = document.getElementById('submitBtn');
+const tabLoginBtn = document.getElementById('tabLoginBtn');
+const tabRegBtn = document.getElementById('tabRegBtn');
+const loginFormSection = document.getElementById('loginFormSection');
+const regFormSection = document.getElementById('regFormSection');
+
+let extensionDetected = false;
+
+function lockBehindExtensionGate() {
+  authBox.style.display = 'none';
+  extRequiredNotice.style.display = 'block';
+}
+
+function unlockExtensionGate() {
+  extRequiredNotice.style.display = 'none';
+  if (appBox.style.display !== 'block') {
+    authBox.style.display = 'block';
+  }
+}
+
+setTimeout(() => {
+  if (!extensionDetected) {
+    lockBehindExtensionGate();
+  }
+}, 1500);
+
+document.getElementById('recheckExtBtn').addEventListener('click', () => {
+  location.reload();
+});
+
+tabLoginBtn.addEventListener('click', () => {
+  tabLoginBtn.classList.add('active');
+  tabRegBtn.classList.remove('active');
+  loginFormSection.style.display = 'block';
+  regFormSection.style.display = 'none';
+});
+
+tabRegBtn.addEventListener('click', () => {
+  tabRegBtn.classList.add('active');
+  tabLoginBtn.classList.remove('active');
+  regFormSection.style.display = 'block';
+  loginFormSection.style.display = 'none';
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  function setupPwdToggle(inputId, toggleBtnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(toggleBtnId);
+    if (!input || !btn) return;
+
+    const svg = btn.querySelector('svg');
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      svg.innerHTML = isPassword
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+    });
+  }
+
+  setupPwdToggle('passwordInput', 'togglePwdBtn');
+  setupPwdToggle('regPassword', 'toggleRegPwdBtn');
+  setupPwdToggle('regPassword2', 'toggleRegPwd2Btn');
+});
+
+const manualRows = document.getElementById('manualRows');
+const addRowBtn = document.getElementById('addRowBtn');
+
+function addManualRow(partNumber = '', color = '', qty = '') {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="cell-part" placeholder="例如 3001" value="${escapeAttr(partNumber)}"></td>
+    <td><input type="text" class="cell-color" placeholder="例如 紅" value="${escapeAttr(color)}"></td>
+    <td class="qty-cell"><input type="number" class="cell-qty" min="1" placeholder="1" value="${qty}"></td>
+    <td class="del-cell"><button type="button" class="row-del-btn" title="刪除">×</button></td>
+  `;
+  tr.querySelector('.row-del-btn').addEventListener('click', () => tr.remove());
+  manualRows.appendChild(tr);
+}
+
+addRowBtn.addEventListener('click', () => addManualRow());
+addManualRow();
+addManualRow();
+
+function collectManualParts() {
+  const parts = [];
+  manualRows.querySelectorAll('tr').forEach(tr => {
+    const partNumber = tr.querySelector('.cell-part').value.trim();
+    const color = tr.querySelector('.cell-color').value.trim() || 'None';
+    const qty = parseInt(tr.querySelector('.cell-qty').value, 10) || 1;
+    if (partNumber) {
+      parts.push({ part_number: partNumber, color: color, required_qty: qty });
+    }
+  });
+  return parts;
+}
+
+function escapeAttr(str) { return String(str).replace(/"/g, '&quot;'); }
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+  const templateData = [
+    { "零件編號": "3001", "顏色": "紅", "數量": 5 },
+    { "零件編號": "3002", "顏色": "藍", "數量": 2 }
+  ];
+  const ws = XLSX.utils.json_to_sheet(templateData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "零件清單");
+  XLSX.writeFile(wb, "template.xlsx");
+});
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const excelPreviewArea = document.getElementById('excelPreviewArea');
+let parsedExcelParts = [];
+let uploadedFileBaseName = '';
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) handleExcelFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) handleExcelFile(e.target.files[0]);
+});
+
+function decodeTextAutoEncoding(buffer) {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch (e) {
+    return new TextDecoder('big5').decode(buffer);
+  }
+}
+
+function handleExcelFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const isCsv = /\.csv$/i.test(file.name);
+      let workbook;
+
+      if (isCsv) {
+        const buffer = e.target.result;
+        const text = decodeTextAutoEncoding(buffer);
+        workbook = XLSX.read(text, { type: 'string' });
+      } else {
+        const data = new Uint8Array(e.target.result);
+        workbook = XLSX.read(data, { type: 'array' });
+      }
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      const result = parseRowsToParts(rows);
+
+      if (result.error) {
+        excelPreviewArea.innerHTML = `<div class="banner short">${escapeHtml(result.error)}</div>`;
+        parsedExcelParts = [];
+        uploadedFileBaseName = '';
+        return;
+      }
+
+      parsedExcelParts = result.parts;
+      uploadedFileBaseName = file.name.replace(/\.[^.]+$/, '');
+      renderExcelPreview(file.name, parsedExcelParts);
+    } catch (err) {
+      excelPreviewArea.innerHTML = `<div class="banner short">檔案讀取失敗：${escapeHtml(err.message)}</div>`;
+      parsedExcelParts = [];
+      uploadedFileBaseName = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseRowsToParts(rows) {
+  if (!rows || rows.length === 0) return { error: '檔案內沒有資料' };
+  const headers = Object.keys(rows[0]).map(h => h.trim());
+  const studioRequired = ['BLItemNo', 'ColorName', 'Qty'];
+  const isStudioFormat = studioRequired.every(col => headers.includes(col));
+
+  if (isStudioFormat) {
+    const parts = [];
+    for (const row of rows) {
+      const partNumber = String(row['BLItemNo'] ?? '').trim();
+      if (!partNumber || partNumber.toLowerCase() === 'nan') continue;
+      let qty = parseInt(row['Qty'], 10);
+      if (isNaN(qty) || qty <= 0) qty = 1;
+      let color = String(row['ColorName'] ?? '').trim();
+      if (!color || color.toLowerCase() === 'nan') color = 'None';
+      parts.push({ part_number: partNumber, color: color, required_qty: qty });
+    }
+    return parts.length === 0 ? { error: 'Stud.io 檔案內沒有找到有效的零件資料' } : { parts };
+  }
+
+  const required = ['零件編號', '數量', '顏色'];
+  const missing = required.filter(col => !headers.includes(col));
+  if (missing.length > 0) return { error: `檔案缺少必要欄位：${missing.join('、')}` };
+
+  const parts = [];
+  for (const row of rows) {
+    const partNumber = String(row['零件編號'] ?? '').trim();
+    if (!partNumber || partNumber.toLowerCase() === 'nan') continue;
+    let qty = parseInt(row['數量'], 10);
+    if (isNaN(qty) || qty <= 0) qty = 1;
+    let color = String(row['顏色'] ?? '').trim();
+    if (!color || color.toLowerCase() === 'nan') color = 'None';
+    parts.push({ part_number: partNumber, color: color, required_qty: qty });
+  }
+  return parts.length === 0 ? { error: '沒有找到有效的零件資料' } : { parts };
+}
+
+function renderExcelPreview(fileName, parts) {
+  const rowsHtml = parts.map(p => `
+    <tr>
+      <td>${escapeHtml(p.part_number)}</td>
+      <td>${escapeHtml(p.color)}</td>
+      <td>${p.required_qty}</td>
+    </tr>
+  `).join('');
+
+  excelPreviewArea.innerHTML = `
+    <div class="file-summary">
+      <span>已解析 <span class="fname">${escapeHtml(fileName)}</span> · 共 ${parts.length} 筆零件</span>
+      <button class="clear-file-btn" id="clearFileBtn">清除重新上傳</button>
+    </div>
+    <div class="preview-table-wrap">
+      <table class="preview-table">
+        <thead><tr><th>零件編號</th><th>顏色</th><th>數量</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById('clearFileBtn').addEventListener('click', () => {
+    parsedExcelParts = [];
+    uploadedFileBaseName = '';
+    fileInput.value = '';
+    excelPreviewArea.innerHTML = '';
+  });
+}
+
+async function loadBlacklistFromServer() {
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/blacklist`, {
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      userBlacklist = new Set(data.blacklist || []);
+    } else {
+      userBlacklist = new Set();
+    }
+  } catch (e) {
+    userBlacklist = new Set();
+  }
+  renderBlacklistUI();
+}
+
+function renderBlacklistUI() {
+  const chipsBox = document.getElementById('blacklistChips');
+  const countLabel = document.getElementById('blacklistCount');
+  const badge = document.getElementById('blacklistBadge');
+  countLabel.textContent = `已封鎖數量: ${userBlacklist.size} 個`;
+  if (userBlacklist.size > 0) {
+    badge.textContent = userBlacklist.size;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+  chipsBox.innerHTML = '';
+
+  userBlacklist.forEach(seller => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `
+      <span>👤 ${escapeHtml(seller)}</span>
+      <button class="chip-del" title="解除封鎖">×</button>
+    `;
+    chip.querySelector('.chip-del').addEventListener('click', async () => {
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/blacklist/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({ seller_name: seller })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          alert(data.detail || '刪除黑名單失敗');
+          return;
+        }
+        userBlacklist.delete(seller);
+        renderBlacklistUI();
+      } catch (e) {
+        alert('連線發生錯誤：' + e.message);
+      }
+    });
+    chipsBox.appendChild(chip);
+  });
+}
+
+document.getElementById('addBlacklistBtn').addEventListener('click', async () => {
+  const input = document.getElementById('newSellerInput');
+  const val = input.value.trim();
+  if (!val) return;
+
+  const btn = document.getElementById('addBlacklistBtn');
+  btn.disabled = true;
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/blacklist/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ seller_name: val })
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      alert(data.detail || '加入黑名單失敗');
+      return;
+    }
+    userBlacklist.add(val);
+    input.value = '';
+    renderBlacklistUI();
+  } catch (e) {
+    alert('連線發生錯誤：' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+['usernameInput', 'passwordInput'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('loginBtn').click();
+    }
+  });
+});
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const username = document.getElementById('usernameInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  
+  loginError.className = 'login-status';
+  loginError.innerHTML = '';
+
+  if (!username || !password) {
+    loginError.style.color = 'var(--brick)';
+    loginError.textContent = '請輸入帳號與密碼';
+    return;
+  }
+
+  loginError.style.color = 'var(--ink-soft)';
+  loginError.innerHTML = `<span class="spinner"></span><span>登入中...</span>`;
+
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      loginError.style.color = 'var(--brick)';
+      loginError.textContent = data.detail || '登入失敗';
+      return;
+    }
+
+    currentToken = data.token;
+    loginError.innerHTML = '';
+    authBox.style.display = 'none';
+    appBox.style.display = 'block';
+    userNameLabel.textContent = username;
+    applyPersonalizedGreeting(username);
+    await loadBlacklistFromServer();
+    checkAnnouncementStatus();
+    refreshExtStatus();
+    startHeartbeat();
+    resetIdleLogoutTimer();
+  } catch (e) {
+    loginError.style.color = 'var(--brick)';
+    loginError.textContent = '連線發生錯誤：' + e.message;
+  }
+});
+
+document.getElementById('regBtn').addEventListener('click', async () => {
+  const username = document.getElementById('regUsername').value.trim();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pw = document.getElementById('regPassword').value;
+  const pw2 = document.getElementById('regPassword2').value;
+
+  regError.textContent = '';
+  regSuccess.textContent = '';
+
+  if (!username || !name || !email || !pw || !pw2) {
+    regError.textContent = '❌ 所有欄位皆為必填';
+    return;
+  }
+  if (pw !== pw2) {
+    regError.textContent = '❌ 兩次密碼不一致';
+    return;
+  }
+
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, name, email, password: pw })
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      regError.textContent = data.detail || '註冊失敗';
+      return;
+    }
+
+    regSuccess.textContent = '註冊成功！請切換至「登入」分頁進行登入';
+  } catch (e) {
+    regError.textContent = '註冊連線錯誤：' + e.message;
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  performLogout();
+});
+
+const blacklistDrawer = document.getElementById('blacklistDrawer');
+const blacklistOverlay = document.getElementById('blacklistOverlay');
+
+function openBlacklistDrawer() {
+  blacklistDrawer.classList.add('open');
+  blacklistOverlay.classList.add('open');
+}
+function closeBlacklistDrawer() {
+  blacklistDrawer.classList.remove('open');
+  blacklistOverlay.classList.remove('open');
+}
+
+document.getElementById('blacklistDrawerBtn').addEventListener('click', openBlacklistDrawer);
+document.getElementById('blacklistDrawerCloseBtn').addEventListener('click', closeBlacklistDrawer);
+blacklistOverlay.addEventListener('click', closeBlacklistDrawer);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeBlacklistDrawer();
+});
+
+// ===== 公告彈窗 =====
+const announceOverlay = document.getElementById('announceOverlay');
+const announceBody = document.getElementById('announceBody');
+const announceVersionTag = document.getElementById('announceVersionTag');
+const announceForceFoot = document.getElementById('announceForceFoot');
+const announceViewOnlyFoot = document.getElementById('announceViewOnlyFoot');
+const announceAckCheckbox = document.getElementById('announceAckCheckbox');
+const announceConfirmBtn = document.getElementById('announceConfirmBtn');
+const announceCloseViewBtn = document.getElementById('announceCloseViewBtn');
+const viewAnnouncementBtn = document.getElementById('viewAnnouncementBtn');
+const dismissAnnouncementToggle = document.getElementById('dismissAnnouncementToggle');
+
+let announceIsForceMode = false;
+
+function openAnnouncementModal(content, version, forceMode) {
+  announceBody.textContent = content || '';
+  announceVersionTag.textContent = '';
+  announceIsForceMode = !!forceMode;
+
+  if (announceIsForceMode) {
+    announceAckCheckbox.checked = false;
+    announceConfirmBtn.disabled = true;
+    announceForceFoot.style.display = 'block';
+    announceViewOnlyFoot.style.display = 'none';
+  } else {
+    announceForceFoot.style.display = 'none';
+    announceViewOnlyFoot.style.display = 'block';
+  }
+
+  announceOverlay.classList.add('open');
+}
+
+function closeAnnouncementModal() {
+  announceOverlay.classList.remove('open');
+}
+
+announceOverlay.addEventListener('click', (e) => {
+  if (e.target === announceOverlay && !announceIsForceMode) {
+    closeAnnouncementModal();
+  }
+});
+
+announceAckCheckbox.addEventListener('change', () => {
+  announceConfirmBtn.disabled = !announceAckCheckbox.checked;
+});
+
+async function markAnnouncementRead() {
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/announcement/mark-read`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}));
+      alert(data.detail || '更新公告已讀狀態失敗，請稍後再試');
+      return false;
+    }
+    return true;
+  } catch (e) {
+    alert('連線發生錯誤：' + e.message);
+    return false;
+  }
+}
+
+announceConfirmBtn.addEventListener('click', () => {
+  if (announceConfirmBtn.disabled) return;
+  closeAnnouncementModal();
+});
+
+announceCloseViewBtn.addEventListener('click', closeAnnouncementModal);
+viewAnnouncementBtn.addEventListener('click', async () => {
+  if (!currentToken) return;
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/announcement/content`, {
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      alert(data.detail || '讀取公告內容失敗');
+      return;
+    }
+    openAnnouncementModal(data.content, data.current_version, false);
+  } catch (e) {
+    alert('連線發生錯誤：' + e.message);
+  }
+});
+
+dismissAnnouncementToggle.addEventListener('change', async () => {
+  if (!dismissAnnouncementToggle.checked) {
+    dismissAnnouncementToggle.checked = true;
+    return;
+  }
+
+  dismissAnnouncementToggle.disabled = true;
+  const ok = await markAnnouncementRead();
+  if (ok) {
+    dismissAnnouncementToggle.checked = true;
+    dismissAnnouncementToggle.disabled = true;
+    closeAnnouncementModal();
+  } else {
+    dismissAnnouncementToggle.checked = false;
+    dismissAnnouncementToggle.disabled = false;
+  }
+});
+
+async function checkAnnouncementStatus() {
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/announcement/status`, {
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+    const data = await resp.json();
+    if (!resp.ok) return;
+
+    if (data.should_show) {
+      dismissAnnouncementToggle.checked = false;
+      dismissAnnouncementToggle.disabled = false;
+      openAnnouncementModal(data.content, data.current_version, true);
+    } else {
+      dismissAnnouncementToggle.checked = true;
+      dismissAnnouncementToggle.disabled = true;
+    }
+  } catch (e) {
+  }
+}
+
+const GREETINGS = {
+  morning: [
+    '早，{username}，新的一天，繼續創作吧',
+    '{username}，早安，我已經準備就緒',
+    '晨光正好，{username}，開始今天的採購吧',
+    '{username}，今天準備打造什麼？',
+    '早安，{username}，我已經就位了，你呢?'
+  ],
+  afternoon: [
+    '{username}，午後時光，來找幾個零件吧',
+    '午安，{username}，工坊正忙碌著呢',
+    '{username}，下午了，繼續你的創作大業吧',
+    '{username}，午後正適合整理採購清單',
+    '今天要補齊哪些缺件？{username}'
+  ],
+  evening: [
+    '晚安，{username}，夜深了還在忙採購嗎',
+    '{username}，夜幕降臨，創作之火依然溫暖',
+    '晚上好，{username}，今晚也來 MOC 如何?',
+    '{username}，夜色正濃，繼續你的創作之旅',
+    '夜間模式啟動，{username}，靜音整理今晚的清單吧'
+  ]
+};
+
+function getGreetingTimeSlot() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 18) return 'afternoon';
+  return 'evening';
+}
+
+function pickGreeting(username) {
+  const slot = getGreetingTimeSlot();
+  const list = GREETINGS[slot];
+  const template = list[Math.floor(Math.random() * list.length)];
+  return template.replace('{username}', username);
+}
+
+function applyPersonalizedGreeting(username) {
+  const el = document.getElementById('pageGreeting');
+  if (el) el.textContent = pickGreeting(username);
+}
+
+function compareVersions(a, b) {
+  const pa = String(a || '0').split('.').map(Number);
+  const pb = String(b || '0').split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na > nb) return 1;
+    if (na < nb) return -1;
+  }
+  return 0;
+}
+
+async function checkExtensionVersion(extVersion) {
+  if (!extVersion) return;
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/extension/min-version`);
+    const data = await resp.json();
+    const minVersion = data.min_version;
+    if (minVersion && compareVersions(extVersion, minVersion) < 0) {
+      const banner = document.getElementById('extVersionWarning');
+      if (banner) {
+        banner.textContent = `⚠️ 你的擴充功能版本（${extVersion}）過舊，請更新到最新版（需求版本 ${minVersion}以上），否則部分功能可能無法正常運作。`;
+        banner.style.display = 'block';
+      }
+    }
+  } catch (e) {
+  }
+}
+
+window.addEventListener('message', (event) => {
+  if (event.source !== window) return;
+  if (event.data?.type === 'LEGO_HELPER_READY') {
+    extensionDetected = true;
+    extStatusEl.textContent = '擴充功能：已連接 ✓';
+    extStatusEl.classList.add('ok');
+    unlockExtensionGate();
+    checkExtensionVersion(event.data.version);
+  }
+});
+
+function pingExtension(timeoutMs = 1500) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      window.removeEventListener('message', handler);
+      resolve(false);
+    }, timeoutMs);
+
+    function handler(event) {
+      if (event.source !== window) return;
+      if (event.data?.type === 'LEGO_HELPER_PONG') {
+        clearTimeout(timer);
+        window.removeEventListener('message', handler);
+        resolve(true);
+      }
+    }
+    window.addEventListener('message', handler);
+    window.postMessage({ type: 'LEGO_HELPER_PING' }, '*');
+  });
+}
+
+async function refreshExtStatus() {
+  const connected = await pingExtension();
+  if (connected) {
+    extStatusEl.textContent = '擴充功能：已連接 ✓';
+    extStatusEl.classList.add('ok');
+  } else {
+    extStatusEl.textContent = '擴充功能：尚未偵測到';
+    extStatusEl.classList.remove('ok');
+  }
+  return connected;
+}
+
+function requestOptimize(parts, token, onProgress) {
+  return new Promise((resolve, reject) => {
+    const STALL_LIMIT_MS = 90000;
+    let stallTimer = null;
+
+    function resetStallTimer() {
+      if (stallTimer) clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        reject(new Error('處理已停滯超過 90 秒，請確認擴充功能是否正常運作，或重新整理頁面後再試一次'));
+      }, STALL_LIMIT_MS);
+    }
+
+    function handler(event) {
+      if (event.data?.type === 'LEGO_HELPER_PROGRESS') {
+        resetStallTimer();
+        if (onProgress) onProgress(event.data.completed, event.data.total);
+        return;
+      }
+      if (event.data?.type === 'LEGO_HELPER_RESPONSE') {
+        clearTimeout(stallTimer);
+        window.removeEventListener('message', handler);
+        resolve(event.data.payload);
+      }
+    }
+
+    window.addEventListener('message', handler);
+    resetStallTimer();
+    window.postMessage({
+      type: 'LEGO_HELPER_REQUEST',
+      parts,
+      token,
+      blacklist: Array.from(userBlacklist)
+    }, '*');
+  });
+}
+
+function exportResultToExcel(result) {
+  const exportData = [];
+  (result.recommendations || []).forEach(r => {
+    exportData.append ? null : exportData.push({
+      '零件編號': r.part || '',
+      '賣家 ID': r.seller_id || '',
+      '賣家名稱': r.seller_name || '',
+      '商品名稱': r.item_title || '',
+      '單價': r.unit_price || 0,
+      '每包數量': r.pack_qty || 1,
+      '購買包數': r.packs_bought || 1,
+      '小計': (r.unit_price || 0) * (r.packs_bought || 1),
+      '商品連結': r.url || ''
+    });
+  });
+
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "採購建議表");
+  
+  const reportDate = new Date().toISOString().slice(0, 10);
+  const namePrefix = uploadedFileBaseName ? uploadedFileBaseName : 'Shotval';
+  XLSX.writeFile(wb, `${namePrefix}_採購報表_${reportDate}.xlsx`);
+}
+
+function buildShopeeSearchUrl(partNumber, color) {
+  const kwParts = ['lego', partNumber];
+  if (color && color !== 'None') kwParts.push(color);
+  const keyword = kwParts.join(' ');
+  return `https://shopee.tw/search?keyword=${encodeURIComponent(keyword)}`;
+}
+
+function splitPartKey(key) {
+  const idx = String(key || '').indexOf('_');
+  if (idx === -1) return { partNumber: key, color: '' };
+  return {
+    partNumber: key.slice(0, idx),
+    color: key.slice(idx + 1)
+  };
+}
+
+function renderResult(result) {
+  resultArea.innerHTML = '';
+  lastOptimizationResult = result;
+
+  if (result.status !== 'success') {
+    resultArea.innerHTML = `<div class="banner short">計算失敗：${escapeHtml(result.message || result.detail || '未知錯誤')}</div>`;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  const headerBar = document.createElement('div');
+  headerBar.className = 'export-header-bar';
+  headerBar.innerHTML = `
+    <h2> 建議採購清單</h2>
+    <button class="btn-excel" id="exportExcelBtn">📥 下載完整採購 Excel 報表</button>
+  `;
+  frag.appendChild(headerBar);
+
+  const summary = document.createElement('div');
+  summary.className = 'grand-summary';
+  summary.innerHTML = `
+    <div>
+      <div class="label">總金額（含運費）</div>
+      <div class="meta">${result.summary.total_sellers} 個賣家 · ${result.summary.total_sellers} 個包裹</div>
+    </div>
+    <div class="amount">$${Math.round(result.summary.grand_total).toLocaleString()}</div>
+  `;
+  frag.appendChild(summary);
+
+  (result.warnings || []).forEach(w => {
+    const b = document.createElement('div');
+    b.className = 'banner warn';
+    b.textContent = `${w.part}：${w.message || JSON.stringify(w)}`;
+    frag.appendChild(b);
+  });
+
+  const shortageEntries = Object.entries(result.shortage_parts || {});
+  shortageEntries.forEach(([part, s]) => {
+    const b = document.createElement('div');
+    b.className = 'banner short';
+    const { partNumber, color } = splitPartKey(part);
+    const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
+    b.innerHTML = `${escapeHtml(part)} 庫存不足：需要 ${s.needed}，僅找到 ${s.available}，缺 ${s.missing} 個` +
+      ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+    frag.appendChild(b);
+  });
+
+  if (result.unresolved_parts && result.unresolved_parts.length > 0) {
+    result.unresolved_parts.forEach(part => {
+      const b = document.createElement('div');
+      b.className = 'banner short';
+      const { partNumber, color } = splitPartKey(part);
+      const shopeeUrl = buildShopeeSearchUrl(partNumber, color);
+      b.innerHTML = `完全找不到貨源，請確認零件編號或顏色是否正確：${escapeHtml(part)}` +
+        ` <a href="${shopeeUrl}" target="_blank" rel="noopener noreferrer" class="shopee-fallback-link">🔍 到蝦皮找找</a>`;
+      frag.appendChild(b);
+    });
+  }
+
+  const bySeller = {};
+  (result.recommendations || []).forEach(r => {
+    const sid = r.seller_id || 'unknown';
+    if (!bySeller[sid]) bySeller[sid] = [];
+    bySeller[sid].push(r);
+  });
+
+  const sellersInfo = result.sellers || {};
+
+  Object.entries(bySeller).forEach(([sellerId, items]) => {
+    const info = sellersInfo[sellerId] || {};
+    const crate = document.createElement('div');
+    crate.className = 'crate';
+
+    const sellerName = items[0].seller_name || sellerId;
+    crate.innerHTML = `
+      <div class="crate-head">
+        <div>
+          <span class="tag">包裹 · ${sellerId}</span>
+          <div class="seller">${escapeHtml(sellerName)}</div>
+        </div>
+      </div>
+      <div class="crate-items"></div>
+      <div class="crate-foot">
+        <span class="breakdown">小計 $${(info.subtotal ?? '-')} + 運費 $${(info.shipping ?? '-')}</span>
+        <span class="total">$${(info.total ?? '-')}</span>
+      </div>
+    `;
+
+    const itemsBox = crate.querySelector('.crate-items');
+    items.forEach(it => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      const lineTotal = (it.unit_price ?? 0) * (it.packs_bought ?? 1);
+      row.innerHTML = `
+        <div class="item-main">
+          <span class="item-part">${escapeHtml(it.part)}</span>
+          <div class="item-title"><a href="${it.url}" target="_blank" rel="noopener">${escapeHtml(it.item_title || '')}</a></div>
+          <div class="item-qty">單價 $${it.unit_price} × ${it.pack_qty} 個/包 · 買 ${it.packs_bought} 包</div>
+        </div>
+        <div class="item-price">$${lineTotal}</div>
+      `;
+      itemsBox.appendChild(row);
+    });
+
+    frag.appendChild(crate);
+  });
+
+  resultArea.appendChild(frag);
+  document.getElementById('exportExcelBtn').addEventListener('click', () => {
+    exportResultToExcel(lastOptimizationResult);
+  });
+}
+
+submitBtn.addEventListener('click', async () => {
+  resultArea.innerHTML = '';
+
+  if (!currentToken) {
+    resultArea.innerHTML = `<div class="banner short">請先登入</div>`;
+    return;
+  }
+
+  resetIdleLogoutTimer();
+
+  let parts = collectManualParts();
+  if (parsedExcelParts.length > 0) {
+    parts = parsedExcelParts;
+  }
+  if (parts.length === 0) {
+    resultArea.innerHTML = `<div class="banner short">請至少輸入一筆零件編號，或上傳 Excel / CSV 檔案</div>`;
+    return;
+  }
+
+  statusMsg.textContent = '正在確認擴充功能連線狀態...';
+  submitBtn.disabled = true;
+
+  const connected = await refreshExtStatus();
+  if (!connected) {
+    statusMsg.textContent = '';
+    resultArea.innerHTML = `<div class="banner short">請先確認擴充功能已安裝並啟用，不需要重新整理頁面，啟用後可直接重新按下送出</div>`;
+    submitBtn.disabled = false;
+    return;
+  }
+
+  statusMsg.textContent = `正在收集 ${parts.length} 筆零件資料並計算，請稍候...`;
+
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBarFill = document.getElementById('progressBarFill');
+  const progressText = document.getElementById('progressText');
+  progressWrap.style.display = 'block';
+  progressBarFill.style.width = '0%';
+  progressText.textContent = `0 / ${parts.length}`;
+
+  try {
+    const result = await requestOptimize(parts, currentToken, (completed, total) => {
+      const pct = Math.round((completed / total) * 100);
+      progressBarFill.style.width = pct + '%';
+      progressText.textContent = `已完成 ${completed} / ${total} 筆`;
+    });
+    statusMsg.textContent = '';
+    progressWrap.style.display = 'none';
+
+    const isAuthExpired = result?.status === 'error'
+      && typeof result.message === 'string'
+      && (result.message.includes('401') || result.message.includes('登入已失效'));
+
+    if (isAuthExpired) {
+      performLogout('登入已逾時或失效，請重新登入');
+      return;
+    }
+
+    renderResult(result);
+  } catch (e) {
+    statusMsg.textContent = '';
+    progressWrap.style.display = 'none';
+    resultArea.innerHTML = `<div class="banner short">發生錯誤：${escapeHtml(e.message)}</div>`;
+  } finally {
+    submitBtn.disabled = false;
+  }
+});

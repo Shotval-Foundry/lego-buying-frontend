@@ -710,14 +710,34 @@
     cursor: not-allowed;
     opacity: 0.85;
   }
+  .credit-link {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--ink-soft);
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .credit-link:hover {
+    color: var(--stud);
+    border-color: var(--stud);
+  }
+  .site-disclaimer {
+    max-width: 640px;
+    margin: 32px auto 24px;
+    padding: 0 24px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    opacity: 0.75;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-
+  
   <header class="page-head">
     <div class="brand-tag">Shotval Foundry</div>
-    <h1>採購小幫手</h1>
+    <h1 id="pageGreeting">採購小幫手</h1>
     <span class="ext-status" id="extStatus">擴充功能：尚未偵測到</span>
   </header>
 
@@ -876,9 +896,9 @@
         </div>
       </div>
       <div class="drawer-foot">
-        operator: <strong id="userNameLabel"></strong> <span class="version-tag">v2.0.1 | Shotval Foundry</span><br>
-        Developer: <strong>Shota</strong><br>
-        Special thanks: <strong>Will</strong> & <strong>電鋸爸</strong>
+        operator: <strong id="userNameLabel"></strong> <span class="version-tag">系統版本: v2.0.1 | Shotval Foundry</span><br>
+        Developer: <a href="https://www.instagram.com/shotval_foundry/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>Shota</strong></a><br>
+        Special thanks: <a href="https://www.instagram.com/legoplayerwill/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>Will</strong></a> &amp; <a href="https://www.instagram.com/chainsaw__yu/" target="_blank" rel="noopener noreferrer" class="credit-link"><strong>電鋸爸</strong></a>
       </div>
     </div>
 
@@ -927,6 +947,11 @@
 
 </div>
 
+<footer class="site-disclaimer">
+  © 2026 Shotval Foundry。本網站程式碼、系統架構與顏色比對邏輯屬原創開發，僅供本站授權使用
+  禁止未經同意之重製、逆向工程、蒸餾（包含但不限於利用本站輸出訓練或萃取邏輯）或轉售、商用
+</footer>
+
 <script>
   const BACKEND_URL = "https://lego-buying-backend.onrender.com";
   let currentToken = null;
@@ -973,6 +998,8 @@
     resultArea.innerHTML = '';
     statusMsg.textContent = '';
     document.getElementById('announceOverlay')?.classList.remove('open');
+    const greetingEl = document.getElementById('pageGreeting');
+    if (greetingEl) greetingEl.textContent = '採購小幫手';
     if (message) {
       loginError.style.color = 'var(--brick)';
       loginError.textContent = message;
@@ -1111,6 +1138,7 @@
   const fileInput = document.getElementById('fileInput');
   const excelPreviewArea = document.getElementById('excelPreviewArea');
   let parsedExcelParts = [];
+  let uploadedFileBaseName = '';
 
   dropZone.addEventListener('click', () => fileInput.click());
   dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -1124,12 +1152,30 @@
     if (e.target.files.length > 0) handleExcelFile(e.target.files[0]);
   });
 
-  function handleExcelFile(file) {
+function decodeTextAutoEncoding(buffer) {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch (e) {
+    return new TextDecoder('big5').decode(buffer);
+  }
+}
+
+function handleExcelFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const isCsv = /\.csv$/i.test(file.name);
+        let workbook;
+
+        if (isCsv) {
+          const buffer = e.target.result;
+          const text = decodeTextAutoEncoding(buffer);
+          workbook = XLSX.read(text, { type: 'string' });
+        } else {
+          const data = new Uint8Array(e.target.result);
+          workbook = XLSX.read(data, { type: 'array' });
+        }
+
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
         const result = parseRowsToParts(rows);
@@ -1137,14 +1183,17 @@
         if (result.error) {
           excelPreviewArea.innerHTML = `<div class="banner short">${escapeHtml(result.error)}</div>`;
           parsedExcelParts = [];
+          uploadedFileBaseName = '';
           return;
         }
 
         parsedExcelParts = result.parts;
+        uploadedFileBaseName = file.name.replace(/\.[^.]+$/, '');
         renderExcelPreview(file.name, parsedExcelParts);
       } catch (err) {
         excelPreviewArea.innerHTML = `<div class="banner short">檔案讀取失敗：${escapeHtml(err.message)}</div>`;
         parsedExcelParts = [];
+        uploadedFileBaseName = '';
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1211,6 +1260,7 @@
 
     document.getElementById('clearFileBtn').addEventListener('click', () => {
       parsedExcelParts = [];
+      uploadedFileBaseName = '';
       fileInput.value = '';
       excelPreviewArea.innerHTML = '';
     });
@@ -1353,6 +1403,7 @@
       authBox.style.display = 'none';
       appBox.style.display = 'block';
       userNameLabel.textContent = username;
+      applyPersonalizedGreeting(username);
       await loadBlacklistFromServer();
       checkAnnouncementStatus();
       refreshExtStatus();
@@ -1550,6 +1601,49 @@
     }
   }
 
+  const GREETINGS = {
+    morning: [
+      '早，{username}，新的一天，繼續創作吧',
+      '{username}，早安，我已經準備就緒',
+      '晨光正好，{username}，開始今天的採購吧',
+      '{username}，今天準備打造什麼？',
+      '早安，{username}，我已經就位了，你呢?'
+    ],
+    afternoon: [
+      '{username}，午後時光，來找幾個零件吧',
+      '午安，{username}，工坊正忙碌著呢',
+      '{username}，下午了，繼續你的創作大業吧',
+      '{username}，午後正適合整理採購清單',
+      '今天要補齊哪些缺件？{username}'
+    ],
+    evening: [
+      '晚安，{username}，夜深了還在忙採購嗎',
+      '{username}，夜幕降臨，創作之火依然溫暖',
+      '晚上好，{username}，今晚也來 MOC 如何?',
+      '{username}，夜色正濃，繼續你的創作之旅',
+      '夜間模式啟動，{username}，靜音整理今晚的清單吧'
+    ]
+  };
+
+  function getGreetingTimeSlot() {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    return 'evening';
+  }
+
+  function pickGreeting(username) {
+    const slot = getGreetingTimeSlot();
+    const list = GREETINGS[slot];
+    const template = list[Math.floor(Math.random() * list.length)];
+    return template.replace('{username}', username);
+  }
+
+  function applyPersonalizedGreeting(username) {
+    const el = document.getElementById('pageGreeting');
+    if (el) el.textContent = pickGreeting(username);
+  }
+
   function compareVersions(a, b) {
     const pa = String(a || '0').split('.').map(Number);
     const pb = String(b || '0').split('.').map(Number);
@@ -1678,7 +1772,10 @@
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "採購建議表");
-    XLSX.writeFile(wb, `Shotval_採購報表_${new Date().toISOString().slice(0,10)}.xlsx`);
+    
+    const reportDate = new Date().toISOString().slice(0, 10);
+    const namePrefix = uploadedFileBaseName ? uploadedFileBaseName : 'Shotval';
+    XLSX.writeFile(wb, `${namePrefix}_採購報表_${reportDate}.xlsx`);
   }
 
   // ===== 蝦皮補位搜尋連結（僅用於缺貨/無資料項，不做任何自動爬蟲或查詢）=====
@@ -1772,7 +1869,6 @@
       crate.className = 'crate';
 
       const sellerName = items[0].seller_name || sellerId;
-
       crate.innerHTML = `
         <div class="crate-head">
           <div>
