@@ -649,25 +649,22 @@ async function checkAnnouncementStatus() {
 
 const GREETINGS = {
   morning: [
-    '早，{username}，新的一天，繼續創作吧',
-    '{username}，早安，我已經準備就緒',
-    '晨光正好，{username}，開始今天的採購吧',
-    '{username}，今天準備打造什麼？',
-    '早安，{username}，我已經就位了，你呢?'
+    '{username}，新的一天繼續創作吧',
+    '早安，我已經準備就緒',
+    '{username}、開始今天的採購吧',
+    '{username}、今天準備打造什麼？',
   ],
   afternoon: [
-    '{username}，午後時光，來找幾個零件吧',
-    '午安，{username}，工坊正忙碌著呢',
-    '{username}，下午了，繼續你的創作大業吧',
-    '{username}，午後正適合整理採購清單',
+    '{username}、來找幾個零件吧',
+    '下午了，繼續你的創作吧',
+    '{username}、午後正適合整理採購清單',
     '今天要補齊哪些缺件？{username}'
   ],
   evening: [
-    '晚安，{username}，夜深了還在忙採購嗎',
-    '{username}，夜幕降臨，創作之火依然溫暖',
-    '晚上好，{username}，今晚也來 MOC 如何?',
-    '{username}，夜色正濃，繼續你的創作之旅',
-    '夜間模式啟動，{username}，靜音整理今晚的清單吧'
+    '{username}、夜深了還在忙採購嗎',
+    '夜幕降臨、創作之火依然溫暖',
+    '{username}、繼續你的創作之旅',
+    '夜間模式啟動、{username}，整理今晚的清單吧'
   ]
 };
 
