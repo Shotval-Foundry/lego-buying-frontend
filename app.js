@@ -132,13 +132,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const manualRows = document.getElementById('manualRows');
 const addRowBtn = document.getElementById('addRowBtn');
+const placeholder_examples = [
+  { part: '例如 3023', color: '例如 深灰', qty: '3' },
+  { part: '例如 32803', color: '例如 黑', qty: '1' }
+];
 
 function addManualRow(partNumber = '', color = '', qty = '') {
+  const rowIndex = manualRows.querySelectorAll('tr').length;
+  const example = placeholder_examples[rowIndex % placeholder_examples.length];
   const tr = document.createElement('tr');
+
   tr.innerHTML = `
-    <td><input type="text" class="cell-part" placeholder="例如 3001" value="${escapeAttr(partNumber)}"></td>
-    <td><input type="text" class="cell-color" placeholder="例如 紅" value="${escapeAttr(color)}"></td>
-    <td class="qty-cell"><input type="number" class="cell-qty" min="1" placeholder="1" value="${qty}"></td>
+    <td><input type="text" class="cell-part" placeholder="${example.part}" value="${escapeAttr(partNumber)}"></td>
+    <td><input type="text" class="cell-color" placeholder="${example.color}" value="${escapeAttr(color)}"></td>
+    <td class="qty-cell"><input type="number" class="cell-qty" min="1" placeholder="${example.qty}" value="${qty}"></td>
     <td class="del-cell"><button type="button" class="row-del-btn" title="刪除">×</button></td>
   `;
   tr.querySelector('.row-del-btn').addEventListener('click', () => tr.remove());
@@ -250,12 +257,17 @@ function parseRowsToParts(rows) {
   const headers = Object.keys(rows[0]).map(h => h.trim());
   const studioRequired = ['BLItemNo', 'ColorName', 'Qty'];
   const isStudioFormat = studioRequired.every(col => headers.includes(col));
+  const isInvalidPartNumber = (str) => {
+    if (!str || str.toLowerCase() === 'nan') return true;
+    const lower = str.toLowerCase()
+    return lower.includes('total') || lower.includes('sum');
+  };
 
   if (isStudioFormat) {
     const parts = [];
     for (const row of rows) {
       const partNumber = String(row['BLItemNo'] ?? '').trim();
-      if (!partNumber || partNumber.toLowerCase() === 'nan') continue;
+      if (isInvalidPartNumber(partNumber)) continue;
       let qty = parseInt(row['Qty'], 10);
       if (isNaN(qty) || qty <= 0) qty = 1;
       let color = String(row['ColorName'] ?? '').trim();
@@ -272,7 +284,7 @@ function parseRowsToParts(rows) {
   const parts = [];
   for (const row of rows) {
     const partNumber = String(row['零件編號'] ?? '').trim();
-    if (!partNumber || partNumber.toLowerCase() === 'nan') continue;
+    if (isInvalidPartNumber(partNumber)) continue;
     let qty = parseInt(row['數量'], 10);
     if (isNaN(qty) || qty <= 0) qty = 1;
     let color = String(row['顏色'] ?? '').trim();
