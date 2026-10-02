@@ -70,6 +70,8 @@ const tabRegBtn = document.getElementById('tabRegBtn');
 const loginFormSection = document.getElementById('loginFormSection');
 const regFormSection = document.getElementById('regFormSection');
 
+const EXTENSION_DOWNLOAD_URL = 'https://github.com/Shotval-Foundry/lego-buying-extension/releases';
+
 let extensionDetected = false;
 
 function lockBehindExtensionGate() {
@@ -721,6 +723,13 @@ async function checkExtensionVersion(extVersion) {
       const banner = document.getElementById('extVersionWarning');
       if (banner) {
         banner.textContent = `⚠️ 你的擴充功能版本（${extVersion}）過舊，請更新到最新版（需求版本 ${minVersion}以上），否則部分功能可能無法正常運作。`;
+        const link = document.createElement('a');
+        link.href = EXTENSION_DOWNLOAD_URL;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '前往更新';
+        link.style.cssText = 'color:inherit; text-decoration:underline; margin-left:6px;';
+        banner.appendChild(link);
         banner.style.display = 'block';
       }
     }
@@ -987,7 +996,7 @@ submitBtn.addEventListener('click', async () => {
   const connected = await refreshExtStatus();
   if (!connected) {
     statusMsg.textContent = '';
-    resultArea.innerHTML = `<div class="banner short">請先確認擴充功能已安裝並啟用，不需要重新整理頁面，啟用後可直接重新按下送出</div>`;
+    resultArea.innerHTML = `<div class="banner short">請先確認擴充功能已安裝並啟用，不需要重新整理頁面，啟用後可直接重新按下送出。尚未安裝請<a href="${EXTENSION_DOWNLOAD_URL}" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">下載擴充功能</a></div>`;
     submitBtn.disabled = false;
     return;
   }

@@ -27,7 +27,20 @@
       目前偵測不到「Lego Buying Foundry Helper」擴充功能，本工具需要透過它才能查詢零件報價<br><br>
       請先安裝並啟用擴充功能，安裝完成後，<strong style="color: var(--ink);">重新整理本頁面</strong>即可繼續使用
     </p>
-    <button class="btn-ghost" id="recheckExtBtn" style="margin-top: 12px;">重新檢查</button>
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:12px;">
+      <a class="btn-primary" id="downloadExtBtn" href="https://github.com/Shotval-Foundry/lego-buying-extension/releases" target="_blank" rel="noopener noreferrer" style="display:inline-block; text-decoration:none;">下載擴充功能</a>
+      <button class="btn-ghost" id="recheckExtBtn">重新檢查</button>
+    </div>
+    <div style="margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line);">
+      <div style="font-size: 14px; letter-spacing: 0.08em; color: var(--ink); margin-bottom: 12px;">安裝步驟</div>
+      <ol style="margin: 0; padding-left: 22px; color: var(--ink-soft); font-size: 15px; line-height: 2;">
+        <li>點上方「下載擴充功能」，在 Releases 頁面下載最新版的 .zip 檔</li>
+        <li>將 .zip 解壓縮，解壓縮後的資料夾請固定放在不會刪除的位置</li>
+        <li>瀏覽器網址列輸入 <code style="font-family:'JetBrains Mono', monospace; color: var(--ink);">chrome://extensions</code>（Edge 為 <code style="font-family:'JetBrains Mono', monospace; color: var(--ink);">edge://extensions</code>），開啟右上角「開發人員模式」</li>
+        <li>點「載入未封裝項目」，選擇解壓縮後含有 manifest.json 的資料夾</li>
+        <li>回到本頁面重新整理，右上角顯示「擴充功能：已連接」即完成</li>
+      </ol>
+    </div>
   </div>
 
   <div class="panel" id="authBox">
