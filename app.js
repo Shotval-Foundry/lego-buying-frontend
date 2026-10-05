@@ -259,20 +259,35 @@ function parseRowsToParts(rows) {
   const headers = Object.keys(rows[0]).map(h => h.trim());
   const studioRequired = ['BLItemNo', 'ColorName', 'Qty'];
   const isStudioFormat = studioRequired.every(col => headers.includes(col));
+  const isSummaryLabel = (str) => /total|sum/i.test(str || '');
   const isInvalidPartNumber = (str) => {
     if (!str || str.toLowerCase() === 'nan') return true;
-    const lower = str.toLowerCase()
-    return lower.includes('total') || lower.includes('sum');
+    return isSummaryLabel(str);
+  };
+  // Stud.io 匯出檔結尾會有「Total qty」與其下方的總數字，兩者都不是零件
+  // 判斷：總計標籤列，以及緊接其後、純數字且顏色欄為空的那一列
+  let afterSummaryLabel = false;
+  const isSummaryRow = (partNumber, colorRaw) => {
+    if (isSummaryLabel(partNumber)) { afterSummaryLabel = true; return true; }
+    if (afterSummaryLabel) {
+      afterSummaryLabel = false;
+      if (/^\d+$/.test(partNumber) && !colorRaw) return true;
+    }
+    return false;
   };
 
   if (isStudioFormat) {
     const parts = [];
     for (const row of rows) {
       const partNumber = String(row['BLItemNo'] ?? '').trim();
-      if (isInvalidPartNumber(partNumber)) continue;
-      let qty = parseInt(row['Qty'], 10);
-      if (isNaN(qty) || qty <= 0) qty = 1;
+      const qtyRaw = String(row['Qty'] ?? '').trim();
       let color = String(row['ColorName'] ?? '').trim();
+      if (isSummaryRow(partNumber, color)) continue;
+      if (isInvalidPartNumber(partNumber)) continue;
+      // Stud.io 的真實零件列一定有數量，沒有數量的列視為非零件（統計列、空列）
+      let qty = parseInt(qtyRaw, 10);
+      if (isNaN(qty)) continue;
+      if (qty <= 0) qty = 1;
       if (!color || color.toLowerCase() === 'nan') color = 'None';
       parts.push({ part_number: partNumber, color: color, required_qty: qty });
     }
@@ -286,10 +301,11 @@ function parseRowsToParts(rows) {
   const parts = [];
   for (const row of rows) {
     const partNumber = String(row['零件編號'] ?? '').trim();
+    let color = String(row['顏色'] ?? '').trim();
+    if (isSummaryRow(partNumber, color)) continue;
     if (isInvalidPartNumber(partNumber)) continue;
     let qty = parseInt(row['數量'], 10);
     if (isNaN(qty) || qty <= 0) qty = 1;
-    let color = String(row['顏色'] ?? '').trim();
     if (!color || color.toLowerCase() === 'nan') color = 'None';
     parts.push({ part_number: partNumber, color: color, required_qty: qty });
   }
