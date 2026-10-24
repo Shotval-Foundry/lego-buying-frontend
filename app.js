@@ -69,7 +69,6 @@ const tabLoginBtn = document.getElementById('tabLoginBtn');
 const tabRegBtn = document.getElementById('tabRegBtn');
 const loginFormSection = document.getElementById('loginFormSection');
 const regFormSection = document.getElementById('regFormSection');
-
 const EXTENSION_DOWNLOAD_URL = 'https://github.com/Shotval-Foundry/lego-buying-extension/releases';
 
 let extensionDetected = false;
@@ -215,6 +214,50 @@ function decodeTextAutoEncoding(buffer) {
   }
 }
 
+const HEADER_CANONICAL = {
+  'blitemno': 'BLItemNo', 'colorname': 'ColorName', 'qty': 'Qty',
+  '零件編號': '零件編號', '數量': '數量', '顏色': '顏色'
+};
+const REQUIRED_HEADER_SETS = [
+  ['BLItemNo', 'ColorName', 'Qty'],
+  ['零件編號', '數量', '顏色']
+];
+
+function extractRowsFromWorkbook(workbook) {
+  let firstSeenHeaders = null;
+
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const grid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false });
+    const scanLimit = Math.min(grid.length, 30);
+
+    for (let r = 0; r < scanLimit; r++) {
+      const cells = (grid[r] || []).map(c => String(c ?? '').trim());
+      if (!firstSeenHeaders && cells.some(c => c)) firstSeenHeaders = cells.filter(c => c);
+      const canon = cells.map(c => HEADER_CANONICAL[c.toLowerCase()] || c);
+      const matched = REQUIRED_HEADER_SETS.some(set => set.every(col => canon.includes(col)));
+      if (!matched) continue;
+
+      const rows = [];
+      for (let i = r + 1; i < grid.length; i++) {
+        const line = grid[i] || [];
+        if (line.every(c => String(c ?? '').trim() === '')) continue;
+        const obj = {};
+        canon.forEach((name, idx) => {
+          if (name && !(name in obj)) obj[name] = line[idx] ?? '';
+        });
+        rows.push(obj);
+      }
+      return { rows };
+    }
+  }
+
+  const seen = firstSeenHeaders && firstSeenHeaders.length ? firstSeenHeaders.join('、') : '（沒有偵測到內容）';
+  return {
+    error: `找不到必要欄位。需要「零件編號、數量、顏色」或 Stud.io 匯出的 BLItemNo、ColorName、Qty 偵測到的第一列內容：${seen}`
+  };
+}
+
 function handleExcelFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -231,9 +274,8 @@ function handleExcelFile(file) {
         workbook = XLSX.read(data, { type: 'array' });
       }
 
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-      const result = parseRowsToParts(rows);
+      const extracted = extractRowsFromWorkbook(workbook);
+      const result = extracted.error ? { error: extracted.error } : parseRowsToParts(extracted.rows);
 
       if (result.error) {
         excelPreviewArea.innerHTML = `<div class="banner short">${escapeHtml(result.error)}</div>`;
@@ -264,8 +306,12 @@ function parseRowsToParts(rows) {
     if (!str || str.toLowerCase() === 'nan') return true;
     return isSummaryLabel(str);
   };
+<<<<<<< HEAD
   // Stud.io 匯出檔結尾會有「Total qty」與其下方的總數字，兩者都不是零件
   // 判斷：總計標籤列，以及緊接其後、純數字且顏色欄為空的那一列
+=======
+
+>>>>>>> 4ff5aab (前端新增提醒視窗)
   let afterSummaryLabel = false;
   const isSummaryRow = (partNumber, colorRaw) => {
     if (isSummaryLabel(partNumber)) { afterSummaryLabel = true; return true; }
@@ -284,7 +330,10 @@ function parseRowsToParts(rows) {
       let color = String(row['ColorName'] ?? '').trim();
       if (isSummaryRow(partNumber, color)) continue;
       if (isInvalidPartNumber(partNumber)) continue;
+<<<<<<< HEAD
       // Stud.io 的真實零件列一定有數量，沒有數量的列視為非零件（統計列、空列）
+=======
+>>>>>>> 4ff5aab (前端新增提醒視窗)
       let qty = parseInt(qtyRaw, 10);
       if (isNaN(qty)) continue;
       if (qty <= 0) qty = 1;
@@ -902,6 +951,18 @@ function renderResult(result) {
     <div class="amount">$${Math.round(result.summary.grand_total).toLocaleString()}</div>
   `;
   frag.appendChild(summary);
+
+  const packNote = document.createElement('div');
+  packNote.className = 'banner note';
+  packNote.innerHTML = '提醒：部分賣家會把包裝數量寫在商品圖片上，工具只能讀取標題文字，無法確認<br>下單前請點商品連結確認實際數量與單價';
+  frag.appendChild(packNote);
+
+  if (Array.isArray(result.collect_incomplete) && result.collect_incomplete.length > 0) {
+    const b = document.createElement('div');
+    b.className = 'banner warn';
+    b.textContent = `以下零件的露天查詢發生連線異常，結果可能不完整，建議重新送出一次：${result.collect_incomplete.join('、')}`;
+    frag.appendChild(b);
+  }
 
   (result.warnings || []).forEach(w => {
     const b = document.createElement('div');

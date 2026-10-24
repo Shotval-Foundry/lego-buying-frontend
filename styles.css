@@ -548,6 +548,7 @@ table.preview-table td { padding: 8px 14px; border-bottom: 1px solid var(--line)
 .banner { border-radius: 6px; padding: 14px 18px; font-size: 12px; margin-bottom: 16px; }
 .banner.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #4D381A; }
 .banner.short { background: #2B1416; color: #FF9B9E; border: 1px solid #522023; }
+.banner.note { background: var(--panel); color: var(--ink-soft); border: 1px solid var(--panel-border); }
 .shopee-fallback-link {
   color: #FFB199;
   text-decoration: underline;
@@ -562,7 +563,6 @@ details.raw-json pre {
 }
 .empty-state { text-align: center; color: var(--ink-soft); padding: 40px 0; font-size: 12px; }
 
-/* ===== 公告 Modal ===== */
 .announce-overlay {
   position: fixed;
   inset: 0;
@@ -719,6 +719,10 @@ details.raw-json pre {
   color: var(--ink-soft);
   opacity: 0.75;
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4ff5aab (前端新增提醒視窗)
 .ext-actions {
   display: flex;
   gap: 12px;
@@ -743,4 +747,8 @@ details.raw-json pre {
   cursor: pointer;
 }
 .ext-actions .btn-primary { border: 1px solid var(--ink); font-weight: 600; }
+<<<<<<< HEAD
 .ext-actions .btn-ghost { font-weight: 500; 
+=======
+.ext-actions .btn-ghost { font-weight: 500; }
+>>>>>>> 4ff5aab (前端新增提醒視窗)
