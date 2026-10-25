@@ -85,10 +85,31 @@ function unlockExtensionGate() {
   }
 }
 
-setTimeout(() => {
-  if (!extensionDetected) {
-    lockBehindExtensionGate();
+function markExtensionDetected(version) {
+  extensionDetected = true;
+  extStatusEl.textContent = '擴充功能：已連接 ✓';
+  extStatusEl.classList.add('ok');
+  unlockExtensionGate();
+  if (version) checkExtensionVersion(version);
+}
+
+(function detectExtensionByPing() {
+  const delays = [0, 400, 800];
+  delays.forEach((ms) => {
+    setTimeout(async () => {
+      if (extensionDetected) return;
+      if (await pingExtension(600)) markExtensionDetected();
+    }, ms);
+  });
+})();
+
+setTimeout(async () => {
+  if (extensionDetected) return;
+  if (await pingExtension(800)) {
+    markExtensionDetected();
+    return;
   }
+  lockBehindExtensionGate();
 }, 1500);
 
 document.getElementById('recheckExtBtn').addEventListener('click', () => {
@@ -254,7 +275,7 @@ function extractRowsFromWorkbook(workbook) {
 
   const seen = firstSeenHeaders && firstSeenHeaders.length ? firstSeenHeaders.join('、') : '（沒有偵測到內容）';
   return {
-    error: `找不到必要欄位。需要「零件編號、數量、顏色」或 Stud.io 匯出的 BLItemNo、ColorName、Qty 偵測到的第一列內容：${seen}`
+    error: `找不到必要欄位。需要「零件編號、數量、顏色」或 Stud.io 匯出的 BLItemNo、ColorName、Qty。偵測到的第一列內容：${seen}`
   };
 }
 
@@ -306,12 +327,7 @@ function parseRowsToParts(rows) {
     if (!str || str.toLowerCase() === 'nan') return true;
     return isSummaryLabel(str);
   };
-<<<<<<< HEAD
-  // Stud.io 匯出檔結尾會有「Total qty」與其下方的總數字，兩者都不是零件
-  // 判斷：總計標籤列，以及緊接其後、純數字且顏色欄為空的那一列
-=======
 
->>>>>>> 4ff5aab (前端新增提醒視窗)
   let afterSummaryLabel = false;
   const isSummaryRow = (partNumber, colorRaw) => {
     if (isSummaryLabel(partNumber)) { afterSummaryLabel = true; return true; }
@@ -330,10 +346,7 @@ function parseRowsToParts(rows) {
       let color = String(row['ColorName'] ?? '').trim();
       if (isSummaryRow(partNumber, color)) continue;
       if (isInvalidPartNumber(partNumber)) continue;
-<<<<<<< HEAD
-      // Stud.io 的真實零件列一定有數量，沒有數量的列視為非零件（統計列、空列）
-=======
->>>>>>> 4ff5aab (前端新增提醒視窗)
+      
       let qty = parseInt(qtyRaw, 10);
       if (isNaN(qty)) continue;
       if (qty <= 0) qty = 1;
@@ -805,11 +818,7 @@ async function checkExtensionVersion(extVersion) {
 window.addEventListener('message', (event) => {
   if (event.source !== window) return;
   if (event.data?.type === 'LEGO_HELPER_READY') {
-    extensionDetected = true;
-    extStatusEl.textContent = '擴充功能：已連接 ✓';
-    extStatusEl.classList.add('ok');
-    unlockExtensionGate();
-    checkExtensionVersion(event.data.version);
+    markExtensionDetected(event.data.version);
   }
 });
 
@@ -836,8 +845,7 @@ function pingExtension(timeoutMs = 1500) {
 async function refreshExtStatus() {
   const connected = await pingExtension();
   if (connected) {
-    extStatusEl.textContent = '擴充功能：已連接 ✓';
-    extStatusEl.classList.add('ok');
+    markExtensionDetected();
   } else {
     extStatusEl.textContent = '擴充功能：尚未偵測到';
     extStatusEl.classList.remove('ok');
@@ -954,7 +962,7 @@ function renderResult(result) {
 
   const packNote = document.createElement('div');
   packNote.className = 'banner note';
-  packNote.innerHTML = '提醒：部分賣家會把包裝數量寫在商品圖片上，工具只能讀取標題文字，無法確認<br>下單前請點商品連結確認實際數量與單價';
+  packNote.innerHTML = '提醒：部分賣家會把包裝數量寫在商品圖片上，工具只能讀取標題文字，無法判讀<br>下單前請點商品連結確認實際數量與單價';
   frag.appendChild(packNote);
 
   if (Array.isArray(result.collect_incomplete) && result.collect_incomplete.length > 0) {
