@@ -85,12 +85,17 @@ function unlockExtensionGate() {
   }
 }
 
+let extVersionChecked = false;
+
 function markExtensionDetected(version) {
   extensionDetected = true;
   extStatusEl.textContent = '擴充功能：已連接 ✓';
   extStatusEl.classList.add('ok');
   unlockExtensionGate();
-  if (version) checkExtensionVersion(version);
+  if (version && !extVersionChecked) {
+    extVersionChecked = true;
+    checkExtensionVersion(version);
+  }
 }
 
 (function detectExtensionByPing() {
@@ -244,6 +249,7 @@ const REQUIRED_HEADER_SETS = [
   ['零件編號', '數量', '顏色']
 ];
 
+// 在所有工作表的前 30 列中尋找表頭列，不再假設第一個工作表的第一列就是表頭
 function extractRowsFromWorkbook(workbook) {
   let firstSeenHeaders = null;
 
@@ -327,7 +333,8 @@ function parseRowsToParts(rows) {
     if (!str || str.toLowerCase() === 'nan') return true;
     return isSummaryLabel(str);
   };
-
+  // Stud.io 匯出檔結尾會有「Total qty」與其下方的總數字，兩者都不是零件
+  // 判斷：總計標籤列，以及緊接其後、純數字且顏色欄為空的那一列
   let afterSummaryLabel = false;
   const isSummaryRow = (partNumber, colorRaw) => {
     if (isSummaryLabel(partNumber)) { afterSummaryLabel = true; return true; }
@@ -346,7 +353,7 @@ function parseRowsToParts(rows) {
       let color = String(row['ColorName'] ?? '').trim();
       if (isSummaryRow(partNumber, color)) continue;
       if (isInvalidPartNumber(partNumber)) continue;
-      
+      // Stud.io 的真實零件列一定有數量，沒有數量的列視為非零件（統計列、空列）
       let qty = parseInt(qtyRaw, 10);
       if (isNaN(qty)) continue;
       if (qty <= 0) qty = 1;
@@ -544,7 +551,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     applyPersonalizedGreeting(username);
     await loadBlacklistFromServer();
     checkAnnouncementStatus();
-    refreshExtStatus();
+    if (!extensionDetected) refreshExtStatus();
     startHeartbeat();
     resetIdleLogoutTimer();
   } catch (e) {
@@ -817,7 +824,7 @@ async function checkExtensionVersion(extVersion) {
 
 window.addEventListener('message', (event) => {
   if (event.source !== window) return;
-  if (event.data?.type === 'LEGO_HELPER_READY') {
+  if (event.data?.type === 'LEGO_HELPER_READY' || event.data?.type === 'LEGO_HELPER_PONG') {
     markExtensionDetected(event.data.version);
   }
 });
@@ -843,10 +850,17 @@ function pingExtension(timeoutMs = 1500) {
 }
 
 async function refreshExtStatus() {
-  const connected = await pingExtension();
+  let connected = await pingExtension();
+  // 先前已經偵測成功過，單次逾時可能只是回應太慢，多試兩次才判定斷線
+  if (!connected && extensionDetected) {
+    for (let i = 0; i < 2 && !connected; i++) {
+      connected = await pingExtension(2000);
+    }
+  }
   if (connected) {
     markExtensionDetected();
   } else {
+    extensionDetected = false;
     extStatusEl.textContent = '擴充功能：尚未偵測到';
     extStatusEl.classList.remove('ok');
   }
